@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FacturaSnap - Sistema de Órdenes</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    
+    <style>
+        body { background-color: #121212; color: #e0e0e0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card { border: none; border-radius: 15px; background: #1e1e1e; box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+        .table-container { padding: 20px; background: #1e1e1e; border-radius: 15px; }
+        .btn-info { background-color: #0dcaf0; border: none; color: #000; font-weight: bold; }
+        .btn-info:hover { background-color: #0baccc; }
+        .form-control:read-only { background-color: #2a2a2a; border-color: #444; color: #888; }
+        .header-app { margin-bottom: 30px; border-bottom: 1px solid #333; padding-bottom: 15px; }
+        .badge-semana { font-size: 0.8rem; padding: 5px 10px; }
+    </style>
+</head>
+<body class="p-3 p-md-5">
+
+<div class="container-fluid">
+    <div class="header-app d-flex justify-content-between align-items-center">
+        <h2>FacturaSnap <span class="text-info">v2.0</span></h2>
+        <div id="reloj" class="text-secondary"></div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-xl-4 col-lg-5">
+            <div class="card p-4">
+                <h4 class="mb-4 text-info">Nueva Orden de Compra</h4>
+                <form id="facturaForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Orden de Compra #</label>
+                            <input type="text" id="oc" class="form-control" placeholder="Ej: PC 005" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">CCF (Cód. Proveedor)</label>
+                            <input type="text" id="ccf" class="form-control" placeholder="PROV-123" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Empresa Proveedora (TO)</label>
+                        <input type="text" id="proveedor" class="form-control" placeholder="Nombre de la empresa" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Descripción del Proyecto</label>
+                        <textarea id="descripcion" class="form-control" rows="3" placeholder="Ej: PROYECTOS COLOCACION. DESALOJO DE MATERIAL" required></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Monto Total ($)</label>
+                            <input type="number" id="monto" class="form-control" step="0.01" placeholder="0.00" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Fecha (Auto)</label>
+                            <input type="text" id="fecha" class="form-control" readonly>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Semana del Mes</label>
+                        <input type="text" id="semana" class="form-control" readonly>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-info py-2">Guardar y Listar</button>
+                        <button type="reset" id="btnCancelar" class="btn btn-outline-secondary">Limpiar Formulario</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-xl-8 col-lg-7">
+            <div class="table-container shadow">
+                <h4 class="mb-4 text-secondary">Historial de Órdenes</h4>
+                <div class="table-responsive">
+                    <table id="tablaFacturas" class="table table-dark table-hover w-100">
+                        <thead>
+                            <tr>
+                                <th>OC #</th>
+                                <th>Proveedor</th>
+                                <th>Monto</th>
+                                <th>Fecha</th>
+                                <th>Semana</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Inicializar DataTable
+    const table = $('#tablaFacturas').DataTable({
+        language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' },
+        order: [[3, 'desc']],
+        columnDefs: [{ className: "text-center", targets: [5] }]
+    });
+
+    // Función para cálculos automáticos de Fecha y Semana
+    function generarDatosAutomaticos() {
+        const ahora = new Date();
+        const dia = ahora.getDate();
+        const mes = ahora.getMonth();
+        const anio = ahora.getFullYear();
+        
+        // Fecha formato dd/mm/aaaa
+        const fechaStr = `${String(dia).padStart(2, '0')}/${String(mes + 1).padStart(2, '0')}/${anio}`;
+        document.getElementById('fecha').value = fechaStr;
+
+        // Semana del mes
+        const nombresMeses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        const numSemana = Math.ceil(dia / 7);
+        document.getElementById('semana').value = `S${numSemana} - ${nombresMeses[mes]}`;
+    }
+
+    generarDatosAutomaticos();
+
+    // Guardar en la tabla
+    $('#facturaForm').on('submit', function(e) {
+        e.preventDefault();
+
+        const rowData = {
+            oc: $('#oc').val(),
+            proveedor: $('#proveedor').val(),
+            monto: parseFloat($('#monto').val()).toFixed(2),
+            fecha: $('#fecha').val(),
+            semana: $('#semana').val(),
+            descripcion: $('#descripcion').val(),
+            ccf: $('#ccf').val()
+        };
+
+        const fila = [
+            rowData.oc,
+            rowData.proveedor,
+            `$${rowData.monto}`,
+            rowData.fecha,
+            `<span class="badge bg-dark text-info border border-info badge-semana">${rowData.semana}</span>`,
+            `<div class="btn-group">
+                <button class="btn btn-sm btn-outline-info btn-pdf" 
+                    data-oc="${rowData.oc}" 
+                    data-prov="${rowData.proveedor}" 
+                    data-monto="${rowData.monto}" 
+                    data-fecha="${rowData.fecha}" 
+                    data-desc="${rowData.descripcion}">
+                    📄 PDF
+                </button>
+                <button class="btn btn-sm btn-outline-danger btn-borrar">✖</button>
+            </div>`
+        ];
+
+        table.row.add(fila).draw(false);
+        this.reset();
+        generarDatosAutomaticos();
+    });
+
+    // Eliminar registro
+    $('#tablaFacturas').on('click', '.btn-borrar', function() {
+        table.row($(this).parents('tr')).remove().draw();
+    });
+
+    // GENERAR PDF (Lógica basada en la imagen de FECO, S.A. DE C.V.)
+    $('#tablaFacturas').on('click', '.btn-pdf', function() {
+        const btn = $(this);
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        // --- ENCABEZADO IZQUIERDO ---
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        doc.text("ORDERED BY:", 20, 20);
+        
+        doc.setFontSize(14);
+        doc.text("FECO, S.A. DE C.V.", 20, 28);
+        
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal");
+        doc.text("Av. Lamatepec y Calle Chaparr.\n#3, Urb. Ind Sta Elena\nAntiguo Cuscatlan\nEl Salvador\n\nVoice: 761 13756", 20, 33);
+        
+        // --- TÍTULO DERECHA (ESTILO VERDE) ---
+        doc.setFontSize(26);
+        doc.setTextColor(76, 145, 105); // Verde Purchase Order
+        doc.text("PURCHASE", 120, 25);
+        doc.text("ORDER", 120, 35);
+        
+        doc.setFontSize(10);
+        doc.setTextColor(0);
+        doc.setFont("helvetica", "bold");
+        doc.text(`Purchase Order No.:  PC ${btn.data('oc')}`, 120, 45);
+        doc.text(`Date Issued:             ${btn.data('fecha')}`, 120, 50);
+
+        // --- CUADRO "TO" (PROVEEDOR) ---
+        doc.setFillColor(235, 245, 235);
+        doc.rect(20, 65, 90, 8, 'F');
+        doc.rect(20, 65, 90, 30);
+        doc.setFont("helvetica", "bold");
+        doc.text("To:", 22, 70);
+        doc.text(btn.data('prov').toUpperCase(), 25, 78);
+        doc.setFont("helvetica", "normal");
+        doc.text("EL SALVADOR", 25, 83);
+
+        // --- TABLA DE ITEMS ---
+        const startY = 110;
+        // Encabezado tabla
+        doc.setFillColor(210, 235, 210);
+        doc.rect(20, startY, 170, 8, 'F');
+        doc.rect(20, startY, 170, 80);
+        
+        doc.setFont("helvetica", "bold");
+        doc.text("Quantity", 25, startY + 5);
+        doc.text("Item / Description", 55, startY + 5);
+        doc.text("Amount", 165, startY + 5);
+        
+        // Líneas verticales
+        doc.line(50, startY, 50, startY + 80);
+        doc.line(160, startY, 160, startY + 80);
+
+        // Contenido
+        doc.setFont("helvetica", "normal");
+        doc.text("1.00", 30, startY + 15);
+        
+        // Texto con ajuste de línea para descripción
+        const descLines = doc.splitTextToSize(btn.data('desc'), 100);
+        doc.text(descLines, 55, startY + 15);
+        
+        doc.text(`$${btn.data('monto')}`, 165, startY + 15);
+
+        // --- TOTAL ---
+        doc.setFillColor(210, 235, 210);
+        doc.rect(130, startY + 80, 60, 10, 'F');
+        doc.rect(130, startY + 80, 60, 10);
+        doc.setFont("helvetica", "bold");
+        doc.text("TOTAL", 135, startY + 87);
+        doc.text(`$${btn.data('monto')}`, 165, startY + 87);
+
+        // --- FIRMA ---
+        doc.line(20, 250, 100, 250);
+        doc.text("Authorized Signature", 20, 256);
+
+        // Descarga
+        doc.save(`Orden_Compra_${btn.data('oc')}.pdf`);
+    });
+});
+</script>
+
+</body>
+</html>
