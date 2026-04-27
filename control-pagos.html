@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Pagos - FacturaSnap</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <style>
+        body { background-color: #0f0f0f; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; }
+        .card { border: none; border-radius: 12px; background: #1e1e1e; margin-bottom: 1.5rem; }
+        .header-app { border-bottom: 2px solid #0dcaf0; padding-bottom: 10px; margin-bottom: 25px; }
+        .table { background-color: #1e1e1e; color: #e0e0e0; }
+        .table-hover tbody tr:hover { background-color: #2a2a2a; }
+        .status-badge { font-size: 0.8rem; padding: 5px 10px; border-radius: 20px; font-weight: bold; }
+        .text-vencido { color: #ff4d4d !important; font-weight: bold; }
+        .form-control, .form-select { background-color: #2a2a2a; border: 1px solid #444; color: #fff; }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+    </style>
+</head>
+
+<body class="p-2 p-md-4">
+
+    <div class="container-fluid">
+        <div class="header-app d-flex justify-content-between align-items-center">
+            <h2 class="m-0">
+                <a href="index.html" class="text-decoration-none text-white">
+                    <i class="fas fa-arrow-left me-2 fs-4 text-info"></i>
+                </a>Control de Pagos
+            </h2>
+        </div>
+
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                <form id="filterForm" class="row g-3 align-items-end">
+                    <div class="col-md-2">
+                        <label class="small fw-bold text-info">Desde:</label>
+                        <input type="date" id="filterDesde" class="form-control">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="small fw-bold text-info">Hasta:</label>
+                        <input type="date" id="filterHasta" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="small fw-bold text-info">Proyecto:</label>
+                        <select id="filterProyecto" class="form-select">
+                            <option value="">Todos los proyectos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="small fw-bold text-info">Proveedor:</label>
+                        <select id="filterProveedor" class="form-select">
+                            <option value="">Todos los proveedores</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex gap-1">
+                        <button type="submit" class="btn btn-info w-100 fw-bold">
+                            <i class="fas fa-filter"></i> Filtrar
+                        </button>
+                        <button type="button" id="btnReset" class="btn btn-outline-secondary">
+                            <i class="fas fa-undo"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card shadow">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>PO</th>
+                                <th>Proyecto</th>
+                                <th>Proveedor</th>
+                                <th>Emisión</th>
+                                <th>Vencimiento</th>
+                                <th>Total</th>
+                                <th>DTE / Factura</th>
+                                <th>Estado</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pagosBody">
+                            <tr>
+                                <td colspan="9" class="text-center p-4">Cargando información...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // Configuración de Supabase
+        const _supabase = supabase.createClient('https://kcamvogialgzhtnztink.supabase.co', 'sb_publishable_KDacU7ubY2lYE6BAVvhOmA_qe1XUR2s');
+
+        // Helper para fechas
+        const fmtF = (f) => f ? f.split('-').reverse().join('/') : '-';
+
+        // 1. Cargar Selects
+        async function cargarCatalogos() {
+            try {
+                const [resProy, resProv] = await Promise.all([
+                    _supabase.from('proyectos').select('id, nombre_proyecto').order('nombre_proyecto'),
+                    _supabase.from('proveedores').select('id, nombre_comercial').order('nombre_comercial')
+                ]);
+
+                resProy.data?.forEach(p => $('#filterProyecto').append(`<option value="${p.id}">${p.nombre_proyecto}</option>`));
+                resProv.data?.forEach(p => $('#filterProveedor').append(`<option value="${p.id}">${p.nombre_comercial}</option>`));
+            } catch (err) {
+                console.error("Error cargando catálogos:", err);
+            }
+        }
+
+        // 2. Cargar Datos con Filtros
+        async function cargarPagos(filtros = {}) {
+            $('#pagosBody').html('<tr><td colspan="9" class="text-center p-4">Buscando registros...</td></tr>');
+
+            let query = _supabase
+                .from('ordenes_compra')
+                .select(`
+                    id, 
+                    numero_orden, 
+                    fecha, 
+                    fecha_vencimiento, 
+                    total, 
+                    estado, 
+                    numero_factura_dte,
+                    proveedores!inner ( nombre_comercial ),
+                    proyectos!inner ( nombre_proyecto )
+                `);
+
+            // Aplicación de WHERES
+            if (filtros.desde) query = query.gte('fecha', filtros.desde);
+            if (filtros.hasta) query = query.lte('fecha', filtros.hasta);
+            if (filtros.proyecto) query = query.eq('proyecto_id', filtros.proyecto);
+            if (filtros.proveedor) query = query.eq('proveedor_id', filtros.proveedor);
+
+            // Orden final
+            query = query.order('fecha', { ascending: false });
+
+            const { data, error } = await query;
+
+            if (error) {
+                $('#pagosBody').html(`<tr><td colspan="9" class="text-center text-danger p-4">Error: ${error.message}</td></tr>`);
+                return;
+            }
+
+            renderizarTabla(data);
+        }
+
+        // 3. Dibujar la tabla
+        function renderizarTabla(data) {
+            let html = '';
+            const hoy = new Date().toISOString().split('T')[0];
+
+            if (!data || data.length === 0) {
+                html = '<tr><td colspan="9" class="text-center p-4">No se encontraron resultados</td></tr>';
+            } else {
+                data.forEach(p => {
+                    let numStr = p.numero_orden ? p.numero_orden.toString().replace(/\D/g, '') : '000';
+                    let poLabel = `PO - ${numStr.padStart(3, '0')}`;
+
+                    const esPendiente = p.estado?.toLowerCase() === 'pendiente';
+                    const esVencido = esPendiente && p.fecha_vencimiento < hoy;
+
+                    let badgeClass = 'bg-secondary';
+                    if (p.estado === 'Pagado') badgeClass = 'bg-success';
+                    if (p.estado === 'Pendiente') badgeClass = 'bg-warning text-dark';
+
+                    html += `
+                        <tr>
+                            <td class="fw-bold text-info">${poLabel}</td>
+                            <td><small class="fw-bold">${p.proyectos?.nombre_proyecto || 'N/A'}</small></td>
+                            <td>${p.proveedores?.nombre_comercial || 'N/A'}</td>
+                            <td>${fmtF(p.fecha)}</td>
+                            <td class="${esVencido ? 'text-vencido' : ''}">
+                                ${fmtF(p.fecha_vencimiento)} 
+                                ${esVencido ? '<i class="fas fa-exclamation-triangle ms-1"></i>' : ''}
+                            </td>
+                            <td class="fw-bold">$${p.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                            <td><small class="text-secondary">${p.numero_factura_dte || '---'}</small></td>
+                            <td><span class="status-badge ${badgeClass}">${p.estado}</span></td>
+                            <td class="text-center">
+                                ${esPendiente ?
+                                    `<button class="btn btn-sm btn-success" onclick="marcarComoPagado(${p.id})">
+                                        <i class="fas fa-money-bill-wave me-1"></i> Pagar
+                                     </button>` :
+                                    `<i class="fas fa-check-circle text-success fs-5"></i>`
+                                }
+                            </td>
+                        </tr>`;
+                });
+            }
+            $('#pagosBody').html(html);
+        }
+
+        // 4. Eventos
+        $('#filterForm').on('submit', function (e) {
+            e.preventDefault();
+            const filtros = {
+                desde: $('#filterDesde').val(),
+                hasta: $('#filterHasta').val(),
+                proyecto: $('#filterProyecto').val(),
+                proveedor: $('#filterProveedor').val()
+            };
+            cargarPagos(filtros);
+        });
+
+        $('#btnReset').on('click', function () {
+            $('#filterForm')[0].reset();
+            cargarPagos();
+        });
+
+        async function marcarComoPagado(id) {
+            if (!confirm('¿Confirmar el pago?')) return;
+            const { error } = await _supabase.from('ordenes_compra').update({ estado: 'Pagado' }).eq('id', id);
+            if (error) alert("Error: " + error.message);
+            else {
+                // Refrescar con los filtros actuales
+                const filtros = {
+                    desde: $('#filterDesde').val(),
+                    hasta: $('#filterHasta').val(),
+                    proyecto: $('#filterProyecto').val(),
+                    proveedor: $('#filterProveedor').val()
+                };
+                cargarPagos(filtros);
+            }
+        }
+
+        $(document).ready(() => {
+            cargarCatalogos();
+            cargarPagos();
+        });
+    </script>
+</body>
+</html>

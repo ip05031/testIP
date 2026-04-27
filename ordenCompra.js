@@ -21,14 +21,18 @@ function generarPDF(items, info, totalTxt) {
     doc.setFontSize(8).setFont("helvetica", "normal").setTextColor(0).text("ORDERED BY:", margenIzquierdo, 60);
     doc.setFontSize(12).setFont("helvetica", "bold").text("FECO, S.A. DE C.V.", margenIzquierdo, 75);
     doc.setFontSize(9).setFont("helvetica", "normal")
-       .text("Av. Lamatepec y Calle Chaparr.\n#3, Urb. Ind Sta Elena\nAntiguo Cuscatlan\nEl Salvador\n\nVoice: 76113756\nFax:", margenIzquierdo, 88);
+        .text("Av. Lamatepec y Calle Chaparr.\n#3, Urb. Ind Sta Elena\nAntiguo Cuscatlan\nEl Salvador\n\nVoice: 76113756\nFax:", margenIzquierdo, 88);
 
     doc.setFontSize(28).setTextColor(verdeFeco[0], verdeFeco[1], verdeFeco[2]).setFont("helvetica", "bold")
-       .text("PURCHASE", 400, 70).text("ORDER", 400, 95);
-    
+        .text("PURCHASE", 400, 70).text("ORDER", 400, 95);
+
+    const formatearFecha = (fecha) => fecha.split('-').reverse().join('/');
+    const fecha1 = formatearFecha(info.fecha);
+    const fecha2 = formatearFecha(info.goodThru);
+
     doc.setFontSize(10).setTextColor(0).setFont("helvetica", "normal")
-       .text(`Purchase Order No.: ${info.oc}`, 400, 115)
-       .text(`Date Issued: ${info.fecha}`, 400, 130);
+        .text(`Purchase Order No.: ${info.oc}`, 400, 115)
+        .text(`Date Issued: ${fecha1}`, 400, 130);
 
     // --- 2. SECCIONES TO / SHIP TO ---
     // Sección TO (Proveedor dinámico)
@@ -36,7 +40,7 @@ function generarPDF(items, info, totalTxt) {
     doc.rect(margenIzquierdo, 160, 240, 15, 'F'); doc.rect(margenIzquierdo, 160, 240, 80);
     doc.setFont("helvetica", "bold").text("To:", margenIzquierdo + 5, 171);
     doc.setFont("helvetica", "normal");
-    
+
     // Dividir dirección del proveedor para que no se salga del cuadro
     const vendorAddr = doc.splitTextToSize(`${info.proveedor}\n${info.direccion}\n\nEL SALVADOR`, 230);
     doc.text(vendorAddr, margenIzquierdo + 5, 188);
@@ -52,15 +56,15 @@ function generarPDF(items, info, totalTxt) {
     doc.setFillColor(verdeClaro[0], verdeClaro[1], verdeClaro[2]);
     doc.rect(margenIzquierdo, yTerminos, 530, 15, 'F'); doc.rect(margenIzquierdo, yTerminos, 530, 30);
     doc.line(140, yTerminos, 140, yTerminos + 30); doc.line(240, yTerminos, 240, yTerminos + 30); doc.line(380, yTerminos, 380, yTerminos + 30);
-    
+
     doc.setFont("helvetica", "bold")
         .text("Good Thru", 65, yTerminos + 11)
         .text("Ship Via", 170, yTerminos + 11)
         .text("Account No.", 280, yTerminos + 11)
         .text("Terms", 460, yTerminos + 11);
-    
+
     doc.setFont("helvetica", "normal")
-        .text(info.goodThru, 60, yTerminos + 26)
+        .text(fecha2, 60, yTerminos + 26)
         .text("Airborne", 165, yTerminos + 26)
         .text(info.terms || "Net 30 Days", 450, yTerminos + 26);
 
@@ -69,24 +73,24 @@ function generarPDF(items, info, totalTxt) {
     const altoTablaMax = 430;
     doc.setFillColor(verdeClaro[0], verdeClaro[1], verdeClaro[2]);
     doc.rect(margenIzquierdo, yTabla, 530, 15, 'F');
-    doc.rect(margenIzquierdo, yTabla, 530, altoTablaMax); 
-    
+    doc.rect(margenIzquierdo, yTabla, 530, altoTablaMax);
+
     // Encabezados
     doc.setFont("helvetica", "bold")
-       .text("Quantity", 55, yTabla + 11)
-       .text("Item", 150, yTabla + 11)
-       .text("Description", 280, yTabla + 11)
-       .text("Unit Cost", 435, yTabla + 11)
-       .text("Amount", 515, yTabla + 11);
+        .text("Quantity", 55, yTabla + 11)
+        .text("Item", 150, yTabla + 11)
+        .text("Description", 280, yTabla + 11)
+        .text("Unit Cost", 435, yTabla + 11)
+        .text("Amount", 515, yTabla + 11);
 
     doc.setFont("helvetica", "normal");
     let yActual = yTabla + 25;
-    const anchoDesc = 200; 
+    const anchoDesc = 200;
 
     items.forEach(obj => {
         const lineasDesc = doc.splitTextToSize(obj.desc, anchoDesc);
         const lineasItem = doc.splitTextToSize(obj.item, 90);
-        
+
         const altoDesc = doc.getTextDimensions(lineasDesc).h;
         const altoItem = doc.getTextDimensions(lineasItem).h;
         const altoMaximoFila = Math.max(altoDesc, altoItem);
@@ -99,8 +103,8 @@ function generarPDF(items, info, totalTxt) {
         doc.text(obj.qty.toString(), 80, yActual, { align: "right" });
         doc.text(lineasItem, 115, yActual);
         doc.text(lineasDesc, 215, yActual);
-        doc.text(parseFloat(obj.cost).toLocaleString('en-US', {minimumFractionDigits: 2}), 485, yActual, { align: "right" });
-        doc.text(parseFloat(obj.amount).toLocaleString('en-US', {minimumFractionDigits: 2}), 560, yActual, { align: "right" });
+        doc.text(parseFloat(obj.cost).toLocaleString('en-US', { minimumFractionDigits: 2 }), 485, yActual, { align: "right" });
+        doc.text(parseFloat(obj.amount).toLocaleString('en-US', { minimumFractionDigits: 2 }), 560, yActual, { align: "right" });
 
         yActual += altoMaximoFila + 15; // Espaciado entre filas
     });
@@ -123,4 +127,6 @@ function generarPDF(items, info, totalTxt) {
     doc.line(130, 745, 300, 745);
 
     doc.save(`Orden_Compra_${info.oc}.pdf`);
+
+
 }

@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Orden de Compra - FacturaSnap</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <style>
+        body {
+            background-color: #0f0f0f;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            background: #1e1e1e;
+            margin-bottom: 1.5rem;
+        }
+
+        .header-app {
+            border-bottom: 2px solid #0dcaf0;
+            padding-bottom: 10px;
+            margin-bottom: 25px;
+        }
+
+        .form-control,
+        .form-select {
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #0dcaf0;
+            box-shadow: none;
+            background-color: #333;
+            color: #fff;
+        }
+
+        .table-responsive {
+            border-radius: 12px;
+            background: #1e1e1e;
+            padding: 15px;
+        }
+
+        .total-row {
+            background-color: #161616;
+            font-size: 1.2rem;
+            color: #0dcaf0;
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+        }
+
+        .label-db {
+            color: #ffc107;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            display: none;
+        }
+
+        .oculto {
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="p-2 p-md-4">
+
+    <div class="container-fluid">
+        <div class="header-app d-flex justify-content-between align-items-center">
+            <h2 class="m-0">
+                <a href="index.html" class="text-decoration-none text-white">
+                    <i class="fas fa-arrow-left me-2 fs-4 text-info"></i>
+                </a>Registro de Orden de Compra
+            </h2>
+            <span class="badge bg-info text-dark">Validación de Vencimiento Dinámico</span>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-xl-4 col-lg-5">
+                <form id="facturaForm">
+                    <div class="card p-3 shadow border-warning">
+                        <h5 class="text-info mb-3 border-bottom pb-2">Información General</h5>
+                        <div class="row g-2">
+                            <div class="col-6 mb-2">
+                                <label class="small fw-bold">Orden de Compra <span
+                                        class="label-db">[numero_orden]</span></label>
+                                <input type="text" id="oc" class="form-control" placeholder="Cargando..." readonly
+                                    required>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <label class="small fw-bold">Fecha Emisión <span class="label-db">[fecha]</span></label>
+                                <input type="date" id="fecha" class="form-control" required>
+                            </div>
+
+                            <div class="col-6 mb-2 oculto">
+                                <label class="small fw-bold">Vencimiento <span
+                                        class="label-db">[fecha_vencimiento]</span></label>
+                                <input type="date" id="fecha_vencimiento" class="form-control" readonly>
+                            </div>
+                            <div class="col-6 mb-2 oculto">
+                                <label class="small fw-bold">Aprobación <span
+                                        class="label-db">[fecha_aprobacion]</span></label>
+                                <input type="text" id="fecha_aprobacion" class="form-control" value="null" readonly>
+                            </div>
+
+                            <div class="col-12 mb-2">
+                                <label class="small fw-bold">Proyecto <span
+                                        class="label-db">[proyecto_id]</span></label>
+                                <select id="select_proyecto" class="form-select" required>
+                                    <option value="">Seleccione un proyecto...</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12 mb-2">
+                                <label class="small fw-bold">Proveedor <span
+                                        class="label-db">[proveedor_id]</span></label>
+                                <select id="select_proveedor" class="form-select" required>
+                                    <option value="">Seleccione un proveedor...</option>
+                                </select>
+                                <small id="termino_pago_hint" class="text-warning d-block mt-1"
+                                    style="font-size: 0.75rem;"></small>
+                            </div>
+
+                            <div class="col-12 mb-2">
+                                <label class="small fw-bold">Dirección de Entrega</label>
+                                <input type="text" id="direccion" class="form-control"
+                                    placeholder="Se llena por Proveedor" required>
+                            </div>
+
+                            <div class="col-6 mb-2">
+                                <label class="small fw-bold">Factura / DTE <span
+                                        class="label-db">[numero_factura_dte]</span></label>
+                                <input type="text" id="numeroFactura" class="form-control" placeholder="Ej: DTE-123">
+                            </div>
+                            <div class="col-6 mb-2 oculto">
+                                <label class="small fw-bold">Estado <span class="label-db">[estado]</span></label>
+                                <input type="text" id="estado" class="form-control" value="Pendiente" readonly>
+                            </div>
+
+                            <div class="col-12 mb-2 oculto">
+                                <label class="small fw-bold">Registrado por <span
+                                        class="label-db">[registrado_por]</span></label>
+                                <input type="text" id="registrado_por" class="form-control"
+                                    placeholder="Nombre de usuario" value="Norma Rodríguez">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-3 shadow border-info">
+                        <h5 class="text-info mb-3 border-bottom pb-2">Agregar Artículo</h5>
+                        <div class="row g-2">
+                            <div class="col-4">
+                                <label class="small">Cant.</label>
+                                <input type="number" id="tempQty" class="form-control" value="1">
+                            </div>
+                            <div class="col-8">
+                                <label class="small">Item</label>
+                                <input type="text" id="tempItem" class="form-control" placeholder="Código">
+                            </div>
+                            <div class="col-12">
+                                <label class="small">Descripción</label>
+                                <textarea id="tempDesc" class="form-control" rows="2"
+                                    placeholder="Detalle del producto"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="small">Costo Unitario ($)</label>
+                                <input type="number" id="tempCost" class="form-control" step="0.01" placeholder="0.00">
+                            </div>
+
+                            <div class="col-12 d-flex gap-2">
+                                <button type="button" id="btnAddItem" class="btn btn-info w-75 fw-bold mt-3">+ AÑADIR A
+                                    LISTA</button>
+                                <button type="button" id="btnApplyIVA" class="btn btn-outline-warning w-25 fw-bold mt-3"
+                                    title="Aplicar 13% IVA">+ IVA</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 py-3 fw-bold">GUARDAR Y GENERAR PDF</button>
+                </form>
+            </div>
+
+            <div class="col-xl-8 col-lg-7">
+                <div class="card p-3 shadow">
+                    <h5 class="text-info mb-3">Resumen de la Orden</h5>
+                    <div class="table-responsive">
+                        <table class="table table-dark align-middle" id="itemsTable">
+                            <thead>
+                                <tr>
+                                    <th>Cant.</th>
+                                    <th>Item</th>
+                                    <th>Descripción</th>
+                                    <th>Costo</th>
+                                    <th>Subtotal</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemsBody"></tbody>
+                            <tfoot>
+                                <tr class="total-row">
+                                    <td colspan="4" class="text-end fw-bold">TOTAL GENERAL:</td>
+                                    <td colspan="2" class="fw-bold" id="totalGeneralLabel">$0.00</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="ordenCompra.js"></script>
+
+    <script>
+        const _supabase = supabase.createClient('https://kcamvogialgzhtnztink.supabase.co', 'sb_publishable_KDacU7ubY2lYE6BAVvhOmA_qe1XUR2s');
+
+        let listaArticulos = [];
+
+        // 1. Obtener siguiente correlativo
+        async function obtenerSiguienteOC() {
+            const { data, error } = await _supabase
+                .from('ordenes_compra')
+                .select('numero_orden')
+                .order('numero_orden', { ascending: false })
+                .limit(1);
+
+            let siguienteNumero = 1;
+            if (!error && data && data.length > 0) {
+                siguienteNumero = parseInt(data[0].numero_orden) + 1;
+            }
+            $('#oc').val(siguienteNumero.toString().padStart(3, '0'));
+        }
+
+        // 2. Cargar Catálogos
+        async function cargarCatalogos() {
+            // Proveedores: Incluimos terminos_pago para la lógica de vencimiento
+            const { data: provs } = await _supabase.from('proveedores').select('id, nombre_comercial, direccion, terminos_pago');
+            provs?.forEach(p => {
+                $('#select_proveedor').append(`<option value="${p.id}" data-dir="${p.direccion}" data-termino="${p.terminos_pago}">${p.nombre_comercial}</option>`);
+            });
+
+            // Proyectos
+            const { data: proys } = await _supabase.from('proyectos').select('id, nombre_proyecto, ubicacion_proyecto');
+            proys?.forEach(p => {
+                $('#select_proyecto').append(`<option value="${p.id}" data-ubica="${p.ubicacion_proyecto}">${p.nombre_proyecto}</option>`);
+            });
+        }
+
+        // Lógica de cálculo de vencimiento dinámico
+        function calcularVencimiento() {
+            const fechaE_str = $('#fecha').val();
+            if (!fechaE_str) return;
+
+            const fechaEmision = new Date(fechaE_str + 'T00:00:00');
+            const terminoPago = $('#select_proveedor option:selected').data('termino') || "";
+
+            const fechaVence = new Date(fechaEmision);
+            /*
+            // Lógica: Si es "Contado", vence el mismo día. Si no, 30 días.
+            if (terminoPago.toLowerCase().includes('contado')) {
+                // Se queda igual (0 días adicionales)
+                $('#termino_pago_hint').text("Término: Contado (Vence hoy)");
+            } else {
+                fechaVence.setDate(fechaVence.getDate() + 30);
+                $('#termino_pago_hint').text("Término: Crédito (Vence en 30 días)");
+            }
+            */
+
+            $('#fecha_vencimiento').val(fechaVence.toISOString().split('T')[0]);
+        }
+
+        // Disparadores para recalcular vencimiento
+        $('#fecha').on('change', calcularVencimiento);
+        $('#select_proveedor').on('change', function () {
+            calcularVencimiento();
+        });
+
+        $('#select_proveedor').on('change', function () {
+            const ubica = $(this).find(':selected').data('dir');
+            if (ubica) $('#direccion').val(ubica);
+        });
+
+        // Gestión de Artículos
+        $('#btnAddItem').on('click', function () {
+            const qty = parseFloat($('#tempQty').val());
+            const item = $('#tempItem').val().trim();
+            const desc = $('#tempDesc').val().trim();
+            const cost = parseFloat($('#tempCost').val());
+
+            if (!item || isNaN(qty) || isNaN(cost)) {
+                alert("Completa los datos del artículo.");
+                return;
+            }
+
+            const amount = qty * cost;
+            listaArticulos.push({ qty, item, desc, cost, amount });
+            renderizarTabla();
+
+            $('#tempQty').val(1); $('#tempItem').val(''); $('#tempDesc').val(''); $('#tempCost').val('');
+        });
+
+        $('#btnApplyIVA').on('click', function () {
+            if (listaArticulos.length === 0) return alert("Agrega artículos primero.");
+            let subtotal = 0;
+            listaArticulos.forEach(a => { if (a.item !== 'IVA') subtotal += a.amount; });
+            const valorIVA = subtotal * 0.13;
+            listaArticulos.push({ qty: 1, item: 'IVA', desc: 'IVA COMPRA (13%)', cost: valorIVA, amount: valorIVA });
+            renderizarTabla();
+        });
+
+        function renderizarTabla() {
+            let html = '';
+            let total = 0;
+            listaArticulos.forEach((art, i) => {
+                total += art.amount;
+                html += `<tr>
+                    <td>${art.qty}</td>
+                    <td><span class="${art.item === 'IVA' ? 'badge bg-warning text-dark' : ''}">${art.item}</span></td>
+                    <td>${art.desc}</td>
+                    <td>$${art.cost.toFixed(2)}</td>
+                    <td>$${art.amount.toFixed(2)}</td>
+                    <td><button type="button" class="btn btn-outline-danger btn-sm" onclick="eliminarItem(${i})"><i class="fas fa-trash"></i></button></td>
+                </tr>`;
+            });
+            $('#itemsBody').html(html);
+            $('#totalGeneralLabel').text(`$${total.toFixed(2)}`);
+        }
+
+        window.eliminarItem = (index) => {
+            listaArticulos.splice(index, 1);
+            renderizarTabla();
+        };
+
+        // GUARDADO FINAL
+        $('#facturaForm').on('submit', async function (e) {
+            e.preventDefault();
+
+            if (listaArticulos.length === 0) {
+                alert("La lista de artículos está vacía.");
+                return;
+            }
+
+            const totalNum = parseFloat($('#totalGeneralLabel').text().replace('$', '').replace(',', ''));
+
+            const datosDB = {
+                numero_orden: parseInt($('#oc').val()),
+                fecha: $('#fecha').val(),
+                proveedor_id: parseInt($('#select_proveedor').val()),
+                proyecto_id: parseInt($('#select_proyecto').val()),
+                total: totalNum,
+                estado: $('#estado').val(),
+                fecha_vencimiento: $('#fecha_vencimiento').val(),
+                registrado_por: $('#registrado_por').val(),
+                fecha_aprobacion: null,
+                numero_factura_dte: $('#numeroFactura').val()
+            };
+
+            const { error } = await _supabase.from('ordenes_compra').insert([datosDB]);
+
+            if (error) {
+                alert("Error DB: " + error.message);
+                return;
+            }
+
+            const infoPDF = {
+                oc: $('#oc').val(),
+                fecha: $('#fecha').val(),
+                proveedor: $('#select_proveedor option:selected').text(),
+                direccion: $('#direccion').val(),
+                goodThru: $('#fecha_vencimiento').val(),
+                terms: $('#select_proveedor option:selected').data('termino') || "Net 30 Days"
+            };
+
+            if (typeof generarPDF === 'function') {
+                generarPDF(listaArticulos, infoPDF, $('#totalGeneralLabel').text());
+                alert("¡Orden Guardada!");
+                location.reload();
+            }
+        });
+
+        $(document).ready(function () {
+            cargarCatalogos();
+            obtenerSiguienteOC();
+
+            // Simular usuario si existe en header (para pruebas)
+            const user = $('#welcomeMsg').text().replace('Bienvenido, ', '').trim();
+            if (user) $('#registrado_por').val(user);
+        });
+    </script>
+</body>
+
+</html>

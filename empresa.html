@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>Configuración de Empresa - FacturaSnap</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body { background-color: #0f0f0f; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; }
+        .card { border: none; border-radius: 12px; background: #1e1e1e; }
+        .header-app { border-bottom: 2px solid #0dcaf0; padding-bottom: 10px; margin-bottom: 25px; }
+        .form-control { background-color: #2a2a2a; border: 1px solid #444; color: #fff; }
+        .form-control:focus { border-color: #0dcaf0; box-shadow: none; color: #fff; background-color: #333; }
+    </style>
+</head>
+<body class="p-4">
+
+<div class="container">
+    <div class="header-app d-flex justify-content-between">
+        <h2><a href="index.html" class="text-info"><i class="fas fa-arrow-left me-2"></i></a>Datos de Mi Empresa</h2>
+        <span class="badge bg-info text-dark">Configuración</span>
+    </div>
+
+    <div class="card p-4 shadow">
+        <form id="formEmpresa">
+            <div class="row">
+                <div class="col-12 mb-3">
+                    <label class="small fw-bold">Nombre de la Empresa</label>
+                    <input type="text" id="nombre_empresa" class="form-control" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="small fw-bold">Dirección 1</label>
+                    <input type="text" id="direccion1" class="form-control" placeholder="Calle o Avenida">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="small fw-bold">Dirección 2</label>
+                    <input type="text" id="direccion2" class="form-control" placeholder="Colonia o Edificio">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="small fw-bold">Municipio</label>
+                    <input type="text" id="municipio" class="form-control">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="small fw-bold">País</label>
+                    <input type="text" id="pais" class="form-control" value="El Salvador">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="small fw-bold">Teléfono (Voice)</label>
+                    <input type="text" id="telefono_voice" class="form-control">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="small fw-bold">Tipo de Envío (Default)</label>
+                    <input type="text" id="tipo_envio" class="form-control" value="Airborne">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="small fw-bold">Términos de Pago (Válido hasta)</label>
+                    <input type="text" id="terminos_pago" class="form-control" value="Net 30 days">
+                </div>
+                <div class="col-12 mb-3">
+                    <label class="small fw-bold">Giro / Actividad Económica</label>
+                    <textarea id="giro_actividad" class="form-control" rows="2"></textarea>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="small fw-bold">NIT</label>
+                    <input type="text" id="nit" class="form-control">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="small fw-bold">NRC</label>
+                    <input type="text" id="nrc" class="form-control">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-info w-100 fw-bold py-3 mt-3">
+                <i class="fas fa-save me-2"></i>GUARDAR Y ACTUALIZAR DATOS
+            </button>
+        </form>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    const _supabase = supabase.createClient('https://kcamvogialgzhtnztink.supabase.co', 'sb_publishable_KDacU7ubY2lYE6BAVvhOmA_qe1XUR2s');
+
+    async function cargarDatos() {
+        const { data } = await _supabase.from('empresa').select('*').eq('id', 1).single();
+        if (data) {
+            $('#nombre_empresa').val(data.nombre_empresa);
+            $('#direccion1').val(data.direccion1);
+            $('#direccion2').val(data.direccion2);
+            $('#municipio').val(data.municipio);
+            $('#pais').val(data.pais);
+            $('#telefono_voice').val(data.telefono_voice);
+            $('#tipo_envio').val(data.tipo_envio);
+            $('#terminos_pago').val(data.terminos_pago);
+            $('#giro_actividad').val(data.giro_actividad);
+            $('#nit').val(data.nit);
+            $('#nrc').val(data.nrc);
+        }
+    }
+
+    $('#formEmpresa').on('submit', async function(e) {
+        e.preventDefault();
+        const info = {
+            id: 1,
+            nombre_empresa: $('#nombre_empresa').val(),
+            direccion1: $('#direccion1').val(),
+            direccion2: $('#direccion2').val(),
+            municipio: $('#municipio').val(),
+            pais: $('#pais').val(),
+            telefono_voice: $('#telefono_voice').val(),
+            tipo_envio: $('#tipo_envio').val(),
+            terminos_pago: $('#terminos_pago').val(),
+            giro_actividad: $('#giro_actividad').val(),
+            nit: $('#nit').val(),
+            nrc: $('#nrc').val()
+        };
+
+        const { error } = await _supabase.from('empresa').upsert(info);
+        if (error) alert("Error: " + error.message);
+        else alert("¡Datos actualizados correctamente!");
+    });
+
+    $(document).ready(cargarDatos);
+</script>
+</body>
+</html>
