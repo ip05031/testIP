@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Items y Partidas - FacturaSnap</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
+    <style>
+        body { background-color: #0f0f0f; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; }
+        .card { border: none; border-radius: 12px; background: #1e1e1e; margin-bottom: 1.5rem; }
+        .header-app { border-bottom: 2px solid #0dcaf0; padding-bottom: 10px; margin-bottom: 25px; }
+        .form-control { background-color: #2a2a2a; border: 1px solid #444; color: #fff; }
+        .form-control:focus { background-color: #333; border-color: #0dcaf0; color: #fff; box-shadow: none; }
+        .table-responsive { border-radius: 12px; background: #1e1e1e; padding: 15px; }
+        label { color: #0dcaf0; font-weight: 500; margin-bottom: 4px; }
+    </style>
+</head>
+<body class="p-2 p-md-4">
+
+<div class="container-fluid">
+    <div class="header-app d-flex justify-content-between align-items-center">
+        <h2 class="m-0">
+            <a href="index.html" class="text-decoration-none text-white">
+                <i class="fas fa-arrow-left me-2 fs-4 text-info"></i>
+            </a>Items / Partidas
+        </h2>
+        <span class="badge bg-info text-dark">Control de Costos</span>
+    </div>
+
+    <div class="row g-4">
+        <!-- Formulario de Registro / Edición -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card p-3 shadow">
+                <h5 class="text-info mb-3 border-bottom pb-2" id="formTitle">Nueva Partida / Item</h5>
+                <form id="itemForm">
+                    <!-- Campo oculto para ID al editar -->
+                    <input type="hidden" id="item_id">
+
+                    <div class="mb-3">
+                        <label class="small">Código del Item</label>
+                        <input type="text" id="codigo_item" class="form-control" placeholder="Ej. MAT-001 o TRA-01" required>
+                        <div class="form-text text-secondary">Identificador único para reportes.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="small">Nombre del Item / Categoría</label>
+                        <input type="text" id="nombre_item" class="form-control" placeholder="Ej. Material Obra Gris" required>
+                    </div>
+                    
+                    <div class="d-flex gap-2 mt-2">
+                        <button type="submit" id="btnSubmit" class="btn btn-info w-100 fw-bold">
+                            <i class="fas fa-save me-2"></i>GUARDAR ITEM
+                        </button>
+                        <button type="button" id="btnCancelar" class="btn btn-outline-secondary w-50 fw-bold d-none">
+                            CANCELAR
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Listado de Items -->
+        <div class="col-xl-8 col-lg-7">
+            <div class="card p-3 shadow">
+                <h5 class="text-info mb-3">Catálogo de Items Registrados</h5>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th style="width: 30%">Código</th>
+                                <th>Descripción / Partida</th>
+                                <th class="text-center" style="width: 15%">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsBody">
+                            <tr>
+                                <td colspan="3" class="text-center text-secondary">Cargando catálogo...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    const _supabase = supabase.createClient('https://kcamvogialgzhtnztink.supabase.co', 'sb_publishable_KDacU7ubY2lYE6BAVvhOmA_qe1XUR2s');
+
+    // Cargar Items desde Supabase
+    async function cargarItems() {
+        const { data, error } = await _supabase
+            .from('items')
+            .select('*')
+            .order('codigo_item', { ascending: true });
+            
+        if (error) {
+            console.error("Error:", error.message);
+            return;
+        }
+        
+        let html = '';
+        if (data.length === 0) {
+            html = '<tr><td colspan="3" class="text-center p-3 text-secondary">No hay items registrados</td></tr>';
+        } else {
+            data.forEach(item => {
+                html += `
+                    <tr>
+                        <td><span class="badge bg-dark text-info border border-info">${item.codigo_item || 'S/C'}</span></td>
+                        <td class="fw-bold">${item.nombre_item}</td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-outline-warning btn-sm" onclick='prepararEdicion(${JSON.stringify(item)})'>
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm" onclick="eliminarItem(${item.id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>`;
+            });
+        }
+        $('#itemsBody').html(html);
+    }
+
+    // Lógica Dual: Insertar o Actualizar
+    $('#itemForm').on('submit', async function(e) {
+        e.preventDefault();
+        
+        const id = $('#item_id').val();
+        const datos = {
+            codigo_item: $('#codigo_item').val().trim(),
+            nombre_item: $('#nombre_item').val().trim()
+        };
+
+        let result;
+        if (id) {
+            // Modo Edición
+            result = await _supabase.from('items').update(datos).eq('id', id);
+        } else {
+            // Modo Nuevo
+            result = await _supabase.from('items').insert([datos]);
+        }
+        
+        if (result.error) {
+            if (result.error.code === '23505') {
+                alert("Error: El código del item ya existe.");
+            } else {
+                alert("Error al guardar: " + result.error.message);
+            }
+        } else {
+            alert(id ? "Item actualizado correctamente" : "Item registrado exitosamente");
+            cancelarEdicion();
+            cargarItems();
+        }
+    });
+
+    // Función para cargar datos en el formulario para editar
+    window.prepararEdicion = (item) => {
+        $('#item_id').val(item.id);
+        $('#codigo_item').val(item.codigo_item);
+        $('#nombre_item').val(item.nombre_item);
+
+        // Cambiar interfaz a modo edición
+        $('#formTitle').html('<i class="fas fa-edit me-2"></i>Editar Partida / Item');
+        $('#btnSubmit').removeClass('btn-info').addClass('btn-warning').html('<i class="fas fa-sync me-2"></i>ACTUALIZAR');
+        $('#btnCancelar').removeClass('d-none');
+    };
+
+    // Función para limpiar formulario y resetear estado
+    function cancelarEdicion() {
+        $('#itemForm')[0].reset();
+        $('#item_id').val('');
+        $('#formTitle').text('Nueva Partida / Item');
+        $('#btnSubmit').removeClass('btn-warning').addClass('btn-info').html('<i class="fas fa-save me-2"></i>GUARDAR ITEM');
+        $('#btnCancelar').addClass('d-none');
+    }
+
+    $('#btnCancelar').on('click', cancelarEdicion);
+
+    // Función para eliminar item[cite: 5]
+    async function eliminarItem(id) {
+        if(confirm('¿Está seguro de eliminar este item? Esto podría afectar reportes históricos.')) {
+            const { error } = await _supabase
+                .from('items')
+                .delete()
+                .eq('id', id);
+                
+            if (error) {
+                alert("No se pudo eliminar: " + error.message);
+            } else {
+                cargarItems();
+            }
+        }
+    }
+
+    $(document).ready(() => { 
+        cargarItems(); 
+    });
+</script>
+</body>
+</html>
