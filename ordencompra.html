@@ -10,67 +10,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
     <style>
-        body {
-            background-color: #0f0f0f;
-            color: #e0e0e0;
-            font-family: 'Segoe UI', sans-serif;
-        }
-
-        .card {
-            border: none;
-            border-radius: 12px;
-            background: #1e1e1e;
-            margin-bottom: 1.5rem;
-        }
-
-        .header-app {
-            border-bottom: 2px solid #0dcaf0;
-            padding-bottom: 10px;
-            margin-bottom: 25px;
-        }
-
-        .form-control,
-        .form-select {
-            background-color: #2a2a2a;
-            border: 1px solid #444;
-            color: #fff;
-            font-size: 16px;
-        }
-
-        .form-control:focus,
-        .form-select:focus {
-            border-color: #0dcaf0;
-            box-shadow: none;
-            background-color: #333;
-            color: #fff;
-        }
-
-        .table-responsive {
-            border-radius: 12px;
-            background: #1e1e1e;
-            padding: 15px;
-        }
-
-        .total-row {
-            background-color: #161616;
-            font-size: 1.2rem;
-            color: #0dcaf0;
-        }
-
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(1);
-        }
-
-        .label-db {
-            color: #ffc107;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            display: none;
-        }
-
-        .oculto {
-            display: none;
-        }
+        body { background-color: #0f0f0f; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; }
+        .card { border: none; border-radius: 12px; background: #1e1e1e; margin-bottom: 1.5rem; }
+        .header-app { border-bottom: 2px solid #0dcaf0; padding-bottom: 10px; margin-bottom: 25px; }
+        .form-control, .form-select { background-color: #2a2a2a; border: 1px solid #444; color: #fff; font-size: 16px; }
+        .form-control:focus, .form-select:focus { border-color: #0dcaf0; box-shadow: none; background-color: #333; color: #fff; }
+        .table-responsive { border-radius: 12px; background: #1e1e1e; padding: 15px; }
+        .total-row { background-color: #161616; font-size: 1.2rem; color: #0dcaf0; }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+        label { color: #0dcaf0; font-weight: 500; margin-bottom: 4px; }
     </style>
 </head>
 
@@ -83,7 +31,7 @@
                     <i class="fas fa-arrow-left me-2 fs-4 text-info"></i>
                 </a>Registro de Orden de Compra
             </h2>
-            <span class="badge bg-info text-dark">Validación de Vencimiento Dinámico</span>
+            <span class="badge bg-info text-dark">Módulo de Adquisiciones</span>
         </div>
 
         <div class="row g-4">
@@ -93,67 +41,35 @@
                         <h5 class="text-info mb-3 border-bottom pb-2">Información General</h5>
                         <div class="row g-2">
                             <div class="col-6 mb-2">
-                                <label class="small fw-bold">Orden de Compra <span
-                                        class="label-db">[numero_orden]</span></label>
-                                <input type="text" id="oc" class="form-control" placeholder="Cargando..." readonly
-                                    required>
+                                <label class="small fw-bold">Orden de Compra</label>
+                                <input type="text" id="oc" class="form-control" readonly required>
                             </div>
                             <div class="col-6 mb-2">
-                                <label class="small fw-bold">Fecha Emisión <span class="label-db">[fecha]</span></label>
+                                <label class="small fw-bold">Fecha Emisión</label>
                                 <input type="date" id="fecha" class="form-control" required>
                             </div>
-
-                            <div class="col-6 mb-2 oculto">
-                                <label class="small fw-bold">Vencimiento <span
-                                        class="label-db">[fecha_vencimiento]</span></label>
-                                <input type="date" id="fecha_vencimiento" class="form-control" readonly>
-                            </div>
-                            <div class="col-6 mb-2 oculto">
-                                <label class="small fw-bold">Aprobación <span
-                                        class="label-db">[fecha_aprobacion]</span></label>
-                                <input type="text" id="fecha_aprobacion" class="form-control" value="null" readonly>
-                            </div>
-
                             <div class="col-12 mb-2">
-                                <label class="small fw-bold">Proyecto <span
-                                        class="label-db">[proyecto_id]</span></label>
+                                <label class="small fw-bold">Proyecto</label>
                                 <select id="select_proyecto" class="form-select" required>
-                                    <option value="">Seleccione un proyecto...</option>
+                                    <option value="">Seleccione proyecto...</option>
                                 </select>
                             </div>
-
                             <div class="col-12 mb-2">
-                                <label class="small fw-bold">Proveedor <span
-                                        class="label-db">[proveedor_id]</span></label>
+                                <label class="small fw-bold">Proveedor</label>
                                 <select id="select_proveedor" class="form-select" required>
-                                    <option value="">Seleccione un proveedor...</option>
+                                    <option value="">Seleccione proveedor...</option>
                                 </select>
-                                <small id="termino_pago_hint" class="text-warning d-block mt-1"
-                                    style="font-size: 0.75rem;"></small>
                             </div>
-
                             <div class="col-12 mb-2">
                                 <label class="small fw-bold">Dirección de Entrega</label>
-                                <input type="text" id="direccion" class="form-control"
-                                    placeholder="Se llena por Proveedor" required>
+                                <input type="text" id="direccion" class="form-control" required>
                             </div>
-
-                            <div class="col-6 mb-2">
-                                <label class="small fw-bold">Factura / DTE <span
-                                        class="label-db">[numero_factura_dte]</span></label>
+                            <div class="col-12 mb-2">
+                                <label class="small fw-bold">Factura / DTE</label>
                                 <input type="text" id="numeroFactura" class="form-control" placeholder="Ej: DTE-123">
                             </div>
-                            <div class="col-6 mb-2 oculto">
-                                <label class="small fw-bold">Estado <span class="label-db">[estado]</span></label>
-                                <input type="text" id="estado" class="form-control" value="Pendiente" readonly>
-                            </div>
-
-                            <div class="col-12 mb-2 oculto">
-                                <label class="small fw-bold">Registrado por <span
-                                        class="label-db">[registrado_por]</span></label>
-                                <input type="text" id="registrado_por" class="form-control"
-                                    placeholder="Nombre de usuario" value="Norma Rodríguez">
-                            </div>
+                            <input type="hidden" id="estado" value="Pendiente">
+                            <input type="hidden" id="registrado_por" value="Norma Rodríguez">
                         </div>
                     </div>
 
@@ -162,27 +78,24 @@
                         <div class="row g-2">
                             <div class="col-4">
                                 <label class="small">Cant.</label>
-                                <input type="number" id="tempQty" class="form-control" value="1">
+                                <input type="number" id="tempQty" class="form-control" value="1" min="1">
                             </div>
                             <div class="col-8">
-                                <label class="small">Item</label>
-                                <input type="text" id="tempItem" class="form-control" placeholder="Código">
+                                <label class="small">Item (Buscar o Digitar)</label>
+                                <input list="itemsDataList" id="tempItem" class="form-control" placeholder="Escriba código...">
+                                <datalist id="itemsDataList"></datalist>
                             </div>
                             <div class="col-12">
                                 <label class="small">Descripción</label>
-                                <textarea id="tempDesc" class="form-control" rows="2"
-                                    placeholder="Detalle del producto"></textarea>
+                                <textarea id="tempDesc" class="form-control" rows="2"></textarea>
                             </div>
                             <div class="col-12">
                                 <label class="small">Costo Unitario ($)</label>
-                                <input type="number" id="tempCost" class="form-control" step="0.01" placeholder="0.00">
+                                <input type="number" id="tempCost" class="form-control" step="0.01">
                             </div>
-
                             <div class="col-12 d-flex gap-2">
-                                <button type="button" id="btnAddItem" class="btn btn-info w-75 fw-bold mt-3">+ AÑADIR A
-                                    LISTA</button>
-                                <button type="button" id="btnApplyIVA" class="btn btn-outline-warning w-25 fw-bold mt-3"
-                                    title="Aplicar 13% IVA">+ IVA</button>
+                                <button type="button" id="btnAddItem" class="btn btn-info w-75 fw-bold mt-3">+ AÑADIR</button>
+                                <button type="button" id="btnApplyIVA" class="btn btn-outline-warning w-25 fw-bold mt-3">+ IVA</button>
                             </div>
                         </div>
                     </div>
@@ -195,7 +108,7 @@
                 <div class="card p-3 shadow">
                     <h5 class="text-info mb-3">Resumen de la Orden</h5>
                     <div class="table-responsive">
-                        <table class="table table-dark align-middle" id="itemsTable">
+                        <table class="table table-dark align-middle">
                             <thead>
                                 <tr>
                                     <th>Cant.</th>
@@ -226,110 +139,77 @@
     <script src="ordenCompra.js"></script>
 
     <script>
+        // Configuración de Supabase
         const _supabase = supabase.createClient('https://kcamvogialgzhtnztink.supabase.co', 'sb_publishable_KDacU7ubY2lYE6BAVvhOmA_qe1XUR2s');
-
         let listaArticulos = [];
 
-        // 1. Obtener siguiente correlativo
+        async function init() {
+            $('#fecha').val(new Date().toISOString().split('T')[0]);
+            await obtenerSiguienteOC();
+            await cargarCatalogos();
+        }
+
         async function obtenerSiguienteOC() {
-            const { data, error } = await _supabase
-                .from('ordenes_compra')
-                .select('numero_orden')
-                .order('numero_orden', { ascending: false })
-                .limit(1);
-
-            let siguienteNumero = 1;
-            if (!error && data && data.length > 0) {
-                siguienteNumero = parseInt(data[0].numero_orden) + 1;
-            }
-            $('#oc').val(siguienteNumero.toString().padStart(3, '0'));
+            const { data } = await _supabase.from('ordenes_compra').select('numero_orden').order('numero_orden', { ascending: false }).limit(1);
+            let siguiente = (data && data.length > 0) ? parseInt(data[0].numero_orden) + 1 : 1;
+            $('#oc').val(siguiente.toString().padStart(4, '0'));
         }
 
-        // 2. Cargar Catálogos
         async function cargarCatalogos() {
-            // Proveedores: Incluimos terminos_pago para la lógica de vencimiento
-            const { data: provs } = await _supabase.from('proveedores').select('id, nombre_comercial, direccion, terminos_pago');
-            provs?.forEach(p => {
-                $('#select_proveedor').append(`<option value="${p.id}" data-dir="${p.direccion}" data-termino="${p.terminos_pago}">${p.nombre_comercial}</option>`);
-            });
+            const { data: provs } = await _supabase.from('proveedores').select('id, nombre_comercial, direccion');
+            provs?.forEach(p => $('#select_proveedor').append(`<option value="${p.id}" data-dir="${p.direccion}">${p.nombre_comercial}</option>`));
 
-            // Proyectos
-            const { data: proys } = await _supabase.from('proyectos').select('id, nombre_proyecto, ubicacion_proyecto');
-            proys?.forEach(p => {
-                $('#select_proyecto').append(`<option value="${p.id}" data-ubica="${p.ubicacion_proyecto}">${p.nombre_proyecto}</option>`);
+            const { data: proys } = await _supabase.from('proyectos').select('id, nombre_proyecto');
+            proys?.forEach(p => $('#select_proyecto').append(`<option value="${p.id}">${p.nombre_proyecto}</option>`));
+
+            const { data: items } = await _supabase.from('items').select('id, codigo_item, nombre_item');
+            items?.forEach(i => {
+                $('#itemsDataList').append(`<option value="${i.codigo_item}" data-id="${i.id}">${i.nombre_item}</option>`);
             });
         }
 
-        // Lógica de cálculo de vencimiento dinámico
-        function calcularVencimiento() {
-            const fechaE_str = $('#fecha').val();
-            if (!fechaE_str) return;
+        $('#select_proveedor').on('change', function () {
+            const dir = $(this).find(':selected').data('dir');
+            if (dir) $('#direccion').val(dir);
+        });
 
-            const fechaEmision = new Date(fechaE_str + 'T00:00:00');
-            const terminoPago = $('#select_proveedor option:selected').data('termino') || "";
-
-            const fechaVence = new Date(fechaEmision);
-            /*
-            // Lógica: Si es "Contado", vence el mismo día. Si no, 30 días.
-            if (terminoPago.toLowerCase().includes('contado')) {
-                // Se queda igual (0 días adicionales)
-                $('#termino_pago_hint').text("Término: Contado (Vence hoy)");
-            } else {
-                fechaVence.setDate(fechaVence.getDate() + 30);
-                $('#termino_pago_hint').text("Término: Crédito (Vence en 30 días)");
+        $('#tempItem').on('input', function() {
+            const val = $(this).val();
+            const option = $(`#itemsDataList option[value='${val}']`);
+            if(option.length > 0) {
+                $('#tempDesc').val(option.text());
             }
-            */
-
-            $('#fecha_vencimiento').val(fechaVence.toISOString().split('T')[0]);
-        }
-
-        // Disparadores para recalcular vencimiento
-        $('#fecha').on('change', calcularVencimiento);
-        $('#select_proveedor').on('change', function () {
-            calcularVencimiento();
         });
 
-        $('#select_proveedor').on('change', function () {
-            const ubica = $(this).find(':selected').data('dir');
-            if (ubica) $('#direccion').val(ubica);
-        });
-
-        // Gestión de Artículos
         $('#btnAddItem').on('click', function () {
             const qty = parseFloat($('#tempQty').val());
             const item = $('#tempItem').val().trim();
             const desc = $('#tempDesc').val().trim();
             const cost = parseFloat($('#tempCost').val());
+            const itemId = $(`#itemsDataList option[value='${item}']`).data('id') || null;
 
-            if (!item || isNaN(qty) || isNaN(cost)) {
-                alert("Completa los datos del artículo.");
-                return;
-            }
+            if (!item || isNaN(qty) || isNaN(cost)) return alert("Complete los datos del artículo.");
 
-            const amount = qty * cost;
-            listaArticulos.push({ qty, item, desc, cost, amount });
+            listaArticulos.push({ qty, item, desc, cost, amount: qty * cost, itemId });
             renderizarTabla();
-
-            $('#tempQty').val(1); $('#tempItem').val(''); $('#tempDesc').val(''); $('#tempCost').val('');
+            $('#tempItem').val(''); $('#tempDesc').val(''); $('#tempCost').val(''); $('#tempQty').val(1);
         });
 
         $('#btnApplyIVA').on('click', function () {
-            if (listaArticulos.length === 0) return alert("Agrega artículos primero.");
-            let subtotal = 0;
-            listaArticulos.forEach(a => { if (a.item !== 'IVA') subtotal += a.amount; });
+            if (listaArticulos.length === 0) return;
+            let subtotal = listaArticulos.reduce((acc, a) => acc + (a.item !== 'IVA' ? a.amount : 0), 0);
             const valorIVA = subtotal * 0.13;
-            listaArticulos.push({ qty: 1, item: 'IVA', desc: 'IVA COMPRA (13%)', cost: valorIVA, amount: valorIVA });
+            listaArticulos.push({ qty: 1, item: 'IVA', desc: 'IVA COMPRA (13%)', cost: valorIVA, amount: valorIVA, itemId: 1 });
             renderizarTabla();
         });
 
         function renderizarTabla() {
-            let html = '';
-            let total = 0;
+            let html = '', total = 0;
             listaArticulos.forEach((art, i) => {
                 total += art.amount;
                 html += `<tr>
                     <td>${art.qty}</td>
-                    <td><span class="${art.item === 'IVA' ? 'badge bg-warning text-dark' : ''}">${art.item}</span></td>
+                    <td><span class="badge border border-info text-info">${art.item}</span></td>
                     <td>${art.desc}</td>
                     <td>$${art.cost.toFixed(2)}</td>
                     <td>$${art.amount.toFixed(2)}</td>
@@ -340,67 +220,83 @@
             $('#totalGeneralLabel').text(`$${total.toFixed(2)}`);
         }
 
-        window.eliminarItem = (index) => {
-            listaArticulos.splice(index, 1);
-            renderizarTabla();
-        };
+        window.eliminarItem = (index) => { listaArticulos.splice(index, 1); renderizarTabla(); };
 
-        // GUARDADO FINAL
+        // LÓGICA DE GUARDADO CORREGIDA
         $('#facturaForm').on('submit', async function (e) {
             e.preventDefault();
+            if (listaArticulos.length === 0) return alert("La lista está vacía.");
 
-            if (listaArticulos.length === 0) {
-                alert("La lista de artículos está vacía.");
-                return;
-            }
+            const totalNum = parseFloat($('#totalGeneralLabel').text().replace('$', ''));
+            const numOC = parseInt($('#oc').val());
 
-            const totalNum = parseFloat($('#totalGeneralLabel').text().replace('$', '').replace(',', ''));
-
-            const datosDB = {
-                numero_orden: parseInt($('#oc').val()),
+            // 1. Guardar Cabecera y obtener el ID REAL generado por Supabase
+            const cabecera = {
+                numero_orden: numOC,
                 fecha: $('#fecha').val(),
                 proveedor_id: parseInt($('#select_proveedor').val()),
                 proyecto_id: parseInt($('#select_proyecto').val()),
                 total: totalNum,
                 estado: $('#estado').val(),
-                fecha_vencimiento: $('#fecha_vencimiento').val(),
+                fecha_vencimiento: $('#fecha').val(),
                 registrado_por: $('#registrado_por').val(),
-                fecha_aprobacion: null,
                 numero_factura_dte: $('#numeroFactura').val()
             };
 
-            const { error } = await _supabase.from('ordenes_compra').insert([datosDB]);
+            // Insertamos y pedimos el registro de vuelta con .select().single()
+            const { data: ordenCreada, error: errorCabecera } = await _supabase
+                .from('ordenes_compra')
+                .insert([cabecera])
+                .select()
+                .single();
 
-            if (error) {
-                alert("Error DB: " + error.message);
-                return;
+            if (errorCabecera) {
+                console.error("Error al guardar cabecera:", errorCabecera);
+                return alert("Error cabecera: " + errorCabecera.message);
             }
 
-            const infoPDF = {
-                oc: $('#oc').val(),
-                fecha: $('#fecha').val(),
-                proveedor: $('#select_proveedor option:selected').text(),
-                direccion: $('#direccion').val(),
-                goodThru: $('#fecha_vencimiento').val(),
-                terms: $('#select_proveedor option:selected').data('termino') || "Net 30 Days"
-            };
+            // El ID que genera la base de datos es el que necesitamos para el detalle
+            const idDeLaOrdenEnBD = ordenCreada.id;
 
-            if (typeof generarPDF === 'function') {
-                generarPDF(listaArticulos, infoPDF, $('#totalGeneralLabel').text());
-                alert("¡Orden Guardada!");
-                location.reload();
+            // 2. Guardar Detalle usando el ID obtenido arriba
+            const detalles = listaArticulos.map(art => ({
+                orden_id: idDeLaOrdenEnBD, // Vínculo con la Foreign Key real
+                cantidad: art.qty,
+                codigo_item: art.item,
+                descripcion: art.desc,
+                costo_unitario: art.cost,
+                subtotal: art.amount,
+                item_id: art.itemId
+            }));
+
+            const { error: errorDetalle } = await _supabase.from('detalle_orden').insert(detalles);
+
+            if (errorDetalle) {
+                console.error("Error al guardar detalles:", errorDetalle);
+                alert("Error en detalles: " + errorDetalle.message);
+            } else {
+
+                const infoPDF = {
+                    oc: $('#oc').val(),
+                    fecha: $('#fecha').val(),
+                    proveedor: $('#select_proveedor option:selected').text(),
+                    direccion: $('#direccion').val(),
+                    goodThru: $('#fecha_vencimiento').val(),
+                    terms: $('#select_proveedor option:selected').data('termino') || "Net 30 Days"
+                };
+
+                if (typeof generarPDF === 'function') {
+                    generarPDF(listaArticulos, infoPDF, $('#totalGeneralLabel').text());
+                    alert("¡Orden Guardada!");
+                    location.reload();
+                }
+
+                //alert("¡Orden #" + numOC + " guardada exitosamente!");
+                //location.reload();
             }
         });
 
-        $(document).ready(function () {
-            cargarCatalogos();
-            obtenerSiguienteOC();
-
-            // Simular usuario si existe en header (para pruebas)
-            const user = $('#welcomeMsg').text().replace('Bienvenido, ', '').trim();
-            if (user) $('#registrado_por').val(user);
-        });
+        $(document).ready(init);
     </script>
 </body>
-
 </html>

@@ -6,7 +6,6 @@
     <title>Proveedores - FacturaSnap</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     
     <style>
@@ -30,8 +29,11 @@
     <div class="row g-4">
         <div class="col-xl-4 col-lg-5">
             <div class="card p-3 shadow">
-                <h5 class="text-info mb-3 border-bottom pb-2">Nuevo Proveedor</h5>
+                <h5 class="text-info mb-3 border-bottom pb-2" id="formTitle">Nuevo Proveedor</h5>
                 <form id="proveedorForm">
+                    <!-- Campo oculto para el ID al editar -->
+                    <input type="hidden" id="proveedor_id">
+
                     <div class="mb-3">
                         <label class="small">Nombre Comercial</label>
                         <input type="text" id="nombre_comercial" class="form-control" placeholder="Ej. Ferretería El Clavo" required>
@@ -77,9 +79,14 @@
                         </select>
                     </div>
 
-                    <button type="submit" class="btn btn-info w-100 fw-bold mt-2">
-                        <i class="fas fa-save me-2"></i>GUARDAR PROVEEDOR
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button type="submit" id="btnSubmit" class="btn btn-info w-100 fw-bold mt-2">
+                            <i class="fas fa-save me-2"></i>GUARDAR
+                        </button>
+                        <button type="button" id="btnCancelar" class="btn btn-outline-secondary w-50 fw-bold mt-2 d-none">
+                            CANCELAR
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -97,8 +104,7 @@
                                 <th class="text-center">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody id="proveedoresBody">
-                            </tbody>
+                        <tbody id="proveedoresBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -109,7 +115,6 @@
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-    // Configuración de Supabase
     const _supabase = supabase.createClient('https://kcamvogialgzhtnztink.supabase.co', 'sb_publishable_KDacU7ubY2lYE6BAVvhOmA_qe1XUR2s');
 
     async function cargarProveedores() {
@@ -137,19 +142,25 @@
                         <div class="small"><i class="fas fa-envelope me-1"></i>${p.email || '-'}</div>
                     </td>
                     <td class="text-center">
-                        <button class="btn btn-outline-danger btn-sm" onclick="eliminarProveedor(${p.id})">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                        <div class="btn-group">
+                            <button class="btn btn-outline-warning btn-sm" onclick='prepararEdicion(${JSON.stringify(p)})'>
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="eliminarProveedor(${p.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>`;
         });
-        $('#proveedoresBody').html(html);
+        $('#proveedoresBody').html(html || '<tr><td colspan="4" class="text-center text-secondary">No hay proveedores registrados</td></tr>');
     }
 
     $('#proveedorForm').on('submit', async function(e) {
         e.preventDefault();
         
-        const nuevo = {
+        const id = $('#proveedor_id').val();
+        const datos = {
             nombre_comercial: $('#nombre_comercial').val(),
             razon_social: $('#razon_social').val(),
             nrc_nit: $('#nrc_nit').val(),
@@ -160,16 +171,47 @@
             terminos_pago: $('#terminos_pago').val()
         };
 
-        const { error } = await _supabase.from('proveedores').insert([nuevo]);
-        
-        if (error) {
-            alert("Error al guardar: " + error.message);
+        let result;
+        if (id) {
+            result = await _supabase.from('proveedores').update(datos).eq('id', id);
         } else {
-            alert("Proveedor guardado correctamente");
-            this.reset();
+            result = await _supabase.from('proveedores').insert([datos]);
+        }
+        
+        if (result.error) {
+            alert("Error al guardar: " + result.error.message);
+        } else {
+            alert(id ? "Proveedor actualizado" : "Proveedor guardado");
+            cancelarEdicion();
             cargarProveedores();
         }
     });
+
+    window.prepararEdicion = (p) => {
+        $('#proveedor_id').val(p.id);
+        $('#nombre_comercial').val(p.nombre_comercial);
+        $('#razon_social').val(p.razon_social);
+        $('#nrc_nit').val(p.nrc_nit);
+        $('#nrc').val(p.nrc);
+        $('#direccion').val(p.direccion);
+        $('#numerotelefono').val(p.numerotelefono);
+        $('#email').val(p.email);
+        $('#terminos_pago').val(p.terminos_pago);
+
+        $('#formTitle').html('<i class="fas fa-edit me-2"></i>Editar Proveedor');
+        $('#btnSubmit').removeClass('btn-info').addClass('btn-warning').html('<i class="fas fa-sync me-2"></i>ACTUALIZAR');
+        $('#btnCancelar').removeClass('d-none');
+    };
+
+    function cancelarEdicion() {
+        $('#proveedorForm')[0].reset();
+        $('#proveedor_id').val('');
+        $('#formTitle').html('Nuevo Proveedor');
+        $('#btnSubmit').removeClass('btn-warning').addClass('btn-info').html('<i class="fas fa-save me-2"></i>GUARDAR PROVEEDOR');
+        $('#btnCancelar').addClass('d-none');
+    }
+
+    $('#btnCancelar').on('click', cancelarEdicion);
 
     async function eliminarProveedor(id) {
         if(confirm('¿Está seguro de eliminar este proveedor?')) {
@@ -179,9 +221,7 @@
         }
     }
 
-    $(document).ready(() => { 
-        cargarProveedores(); 
-    });
+    $(document).ready(cargarProveedores);
 </script>
 </body>
 </html>

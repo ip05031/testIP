@@ -12,6 +12,8 @@
         .form-control { background-color: #2a2a2a; border: 1px solid #444; color: #fff; }
         .form-control:focus { border-color: #0dcaf0; box-shadow: none; background-color: #333; color: #fff; }
         .table-dark { --bs-table-bg: #1e1e1e; }
+        .btn-edit { color: #ffc107; border-color: #ffc107; }
+        .btn-edit:hover { background-color: #ffc107; color: #000; }
     </style>
 </head>
 <body class="p-4">
@@ -23,14 +25,18 @@
                 <i class="fas fa-arrow-left me-2 fs-4 text-info"></i>
             </a>Proyectos
         </h2>
-        <span class="badge bg-info text-dark">Mantenimiento</span>
+        <span class="badge bg-info text-dark">Mantenimiento de Obras</span>
     </div>
 
     <div class="row g-4">
+        <!-- Formulario dinámico (Insertar / Editar) -->
         <div class="col-md-4">
             <div class="card p-4 shadow">
-                <h5 class="text-info mb-3"><i class="fas fa-folder-plus me-2"></i>Nuevo Proyecto</h5>
+                <h5 class="text-info mb-3" id="formTitle"><i class="fas fa-folder-plus me-2"></i>Nuevo Proyecto</h5>
                 <form id="proyectoForm">
+                    <!-- Campo oculto para el ID al editar -->
+                    <input type="hidden" id="proyecto_id">
+                    
                     <div class="mb-3">
                         <label class="small fw-bold">Nombre del Proyecto</label>
                         <input type="text" id="nombre_proyecto" class="form-control" placeholder="Ej. Remodelación Oficinas" required>
@@ -40,31 +46,44 @@
                         <input type="text" id="codigo_proyecto" class="form-control" placeholder="Ej. P-2024-001">
                     </div>
                     <div class="mb-3">
-                        <label class="small fw-bold">Ubicación / Dirección del Proyecto</label>
-                        <textarea id="ubicacion_proyecto" class="form-control" rows="3" placeholder="Dirección donde se entregará el material"></textarea>
+                        <label class="small fw-bold">Presupuesto Inicial ($)</label>
+                        <input type="number" id="presupuesto_inicial" class="form-control" step="0.01" placeholder="0.00" required>
                     </div>
-                    <button type="submit" class="btn btn-info w-100 fw-bold py-2 mt-2">
-                        <i class="fas fa-save me-2"></i>GUARDAR PROYECTO
-                    </button>
+                    <div class="mb-3">
+                        <label class="small fw-bold">Ubicación / Dirección del Proyecto</label>
+                        <textarea id="ubicacion_proyecto" class="form-control" rows="3" placeholder="Dirección de entrega"></textarea>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" id="btnSubmit" class="btn btn-info w-100 fw-bold py-2">
+                            <i class="fas fa-save me-2"></i>GUARDAR
+                        </button>
+                        <button type="button" id="btnCancelar" class="btn btn-outline-secondary w-50 fw-bold d-none">
+                            CANCELAR
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
 
+        <!-- Listado con botón de editar -->
         <div class="col-md-8">
             <div class="card p-4 shadow">
                 <h5 class="text-info mb-3">Proyectos Registrados</h5>
                 <div class="table-responsive">
-                    <table class="table table-dark table-hover">
+                    <table class="table table-dark table-hover align-middle">
                         <thead>
                             <tr>
                                 <th>Código</th>
                                 <th>Proyecto</th>
+                                <th>Presupuesto</th>
                                 <th>Ubicación</th>
-                                <th class="text-center">Acción</th>
+                                <th class="text-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="proyectosBody">
-                            </tbody>
+                            <tr><td colspan="5" class="text-center text-secondary">Cargando proyectos...</td></tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -77,47 +96,95 @@
 <script>
     const _supabase = supabase.createClient('https://kcamvogialgzhtnztink.supabase.co', 'sb_publishable_KDacU7ubY2lYE6BAVvhOmA_qe1XUR2s');
 
+    // 1. Cargar Proyectos con el nuevo campo de presupuesto
     async function cargarProyectos() {
         const { data, error } = await _supabase.from('proyectos').select('*').order('created_at', { ascending: false });
         if (error) return;
         
         let html = '';
         data.forEach(p => {
+            const presupuesto = p.presupuesto_inicial ? parseFloat(p.presupuesto_inicial).toLocaleString('en-US', {minimumFractionDigits: 2}) : '0.00';
             html += `
                 <tr>
                     <td><span class="badge bg-secondary">${p.codigo_proyecto || 'N/A'}</span></td>
-                    <td>${p.nombre_proyecto}</td>
+                    <td><div class="fw-bold text-info">${p.nombre_proyecto}</div></td>
+                    <td class="text-warning fw-bold">$${presupuesto}</td>
                     <td class="small text-secondary">${p.ubicacion_proyecto || 'Sin dirección'}</td>
                     <td class="text-center">
-                        <button class="btn btn-outline-danger btn-sm" onclick="eliminarProyecto(${p.id})">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                        <div class="btn-group">
+                            <button class="btn btn-outline-warning btn-sm" onclick='prepararEdicion(${JSON.stringify(p)})'>
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="eliminarProyecto(${p.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>`;
         });
-        $('#proyectosBody').html(html);
+        $('#proyectosBody').html(html || '<tr><td colspan="5" class="text-center">No hay proyectos registrados</td></tr>');
     }
 
+    // 2. Lógica Dual: Insertar o Actualizar
     $('#proyectoForm').on('submit', async function(e) {
         e.preventDefault();
-        const nuevo = {
+        
+        const id = $('#proyecto_id').val();
+        const datos = {
             nombre_proyecto: $('#nombre_proyecto').val(),
             codigo_proyecto: $('#codigo_proyecto').val(),
+            presupuesto_inicial: parseFloat($('#presupuesto_inicial').val()),
             ubicacion_proyecto: $('#ubicacion_proyecto').val()
         };
 
-        const { error } = await _supabase.from('proyectos').insert([nuevo]);
-        if (error) alert(error.message);
-        else {
-            this.reset();
+        let result;
+        if (id) {
+            // Modo Edición
+            result = await _supabase.from('proyectos').update(datos).eq('id', id);
+        } else {
+            // Modo Nuevo
+            result = await _supabase.from('proyectos').insert([datos]);
+        }
+
+        if (result.error) {
+            alert("Error: " + result.error.message);
+        } else {
+            cancelarEdicion();
             cargarProyectos();
         }
     });
 
+    // 3. Función para cargar datos en el formulario para editar
+    window.prepararEdicion = (p) => {
+        $('#proyecto_id').val(p.id);
+        $('#nombre_proyecto').val(p.nombre_proyecto);
+        $('#codigo_proyecto').val(p.codigo_proyecto);
+        $('#presupuesto_inicial').val(p.presupuesto_inicial);
+        $('#ubicacion_proyecto').val(p.ubicacion_proyecto);
+        
+        // Cambiar UI a modo edición
+        $('#formTitle').html('<i class="fas fa-edit me-2"></i>Editar Proyecto');
+        $('#btnSubmit').removeClass('btn-info').addClass('btn-warning').html('<i class="fas fa-sync me-2"></i>ACTUALIZAR');
+        $('#btnCancelar').removeClass('d-none');
+    };
+
+    // 4. Cancelar edición y limpiar formulario
+    function cancelarEdicion() {
+        $('#proyectoForm')[0].reset();
+        $('#proyecto_id').val('');
+        $('#formTitle').html('<i class="fas fa-folder-plus me-2"></i>Nuevo Proyecto');
+        $('#btnSubmit').removeClass('btn-warning').addClass('btn-info').html('<i class="fas fa-save me-2"></i>GUARDAR');
+        $('#btnCancelar').addClass('d-none');
+    }
+
+    $('#btnCancelar').on('click', cancelarEdicion);
+
+    // 5. Eliminar Proyecto[cite: 4]
     async function eliminarProyecto(id) {
         if(confirm('¿Seguro que desea eliminar este proyecto?')) {
-            await _supabase.from('proyectos').delete().eq('id', id);
-            cargarProyectos();
+            const { error } = await _supabase.from('proyectos').delete().eq('id', id);
+            if(error) alert("Error al eliminar: " + error.message);
+            else cargarProyectos();
         }
     }
 
