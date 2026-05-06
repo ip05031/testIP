@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Orden de Compra - FacturaSnap</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
+    <style>
+        body { background-color: #0f0f0f; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; }
+        .card { border: none; border-radius: 12px; background: #1e1e1e; margin-bottom: 1.5rem; }
+        .header-app { border-bottom: 2px solid #0dcaf0; padding-bottom: 10px; margin-bottom: 25px; }
+        .form-control, .form-select { background-color: #2a2a2a; border: 1px solid #444; color: #fff; font-size: 16px; }
+        .form-control:focus, .form-select:focus { border-color: #0dcaf0; box-shadow: none; background-color: #333; color: #fff; }
+        .table-responsive { border-radius: 12px; background: #1e1e1e; padding: 15px; }
+        .total-row { background-color: #161616; font-size: 1.2rem; color: #0dcaf0; }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+    </style>
+</head>
+<body class="p-2 p-md-4">
+
+<div class="container-fluid">
+    <div class="header-app d-flex justify-content-between align-items-center">
+        <h2 class="m-0">
+            <a href="index.html" class="text-decoration-none text-white">
+                <i class="fas fa-arrow-left me-2 fs-4 text-info"></i>
+            </a>Registro de Orden de Compra
+        </h2>
+        <span class="badge bg-info text-dark">Registro</span>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-xl-4 col-lg-5">
+            <form id="facturaForm">
+                <div class="card p-3 shadow">
+                    <h5 class="text-info mb-3 border-bottom pb-2">Información General</h5>
+                    <div class="row g-2">
+                        <div class="col-6 mb-2">
+                            <label class="small fw-bold">Orden de Compra</label>
+                            <input type="text" id="oc" class="form-control" placeholder="PC-001" required>
+                        </div>
+                        <div class="col-6 mb-2">
+                            <label class="small fw-bold">Fecha Emisión</label>
+                            <input type="date" id="fecha" class="form-control" required>
+                        </div>
+                        
+                        <div class="col-12 mb-2">
+                            <label class="small fw-bold">Proyecto</label>
+                            <select id="select_proyecto" class="form-select" required>
+                                <option value="">Seleccione un proyecto...</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12 mb-2">
+                            <label class="small fw-bold">Proveedor</label>
+                            <select id="select_proveedor" class="form-select" required>
+                                <option value="">Seleccione un proveedor...</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12 mb-2">
+                            <label class="small fw-bold">Dirección de Entrega</label>
+                            <input type="text" id="direccion" class="form-control" placeholder="Se llenará automáticamente" required>
+                        </div>
+
+                        <div class="col-12 mb-2">
+                            <label class="small fw-bold">N&uacute;mero de Factura / DTE</label>
+                            <input type="text" id="numeroFactura" class="form-control" placeholder="Opcional">
+                        </div>                            
+                    </div>
+                </div>
+
+                <div class="card p-3 shadow border-info">
+                    <h5 class="text-info mb-3 border-bottom pb-2">Agregar Artículo</h5>
+                    <div class="row g-2">
+                        <div class="col-4">
+                            <label class="small">Cant.</label>
+                            <input type="number" id="tempQty" class="form-control" value="1">
+                        </div>
+                        <div class="col-8">
+                            <label class="small">Código</label>
+                            <input type="text" id="tempItem" class="form-control">
+                        </div>
+                        <div class="col-12">
+                            <label class="small">Descripción</label>
+                            <textarea id="tempDesc" class="form-control" rows="2"></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="small">Costo Unitario ($)</label>
+                            <input type="number" id="tempCost" class="form-control" step="0.01">
+                        </div>
+                        <button type="button" id="btnAddItem" class="btn btn-info w-100 fw-bold mt-3">+ AÑADIR A LISTA</button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-success w-100 py-3 fw-bold">GENERAR ORDEN (PDF)</button>
+            </form>
+        </div>
+
+        <div class="col-xl-8 col-lg-7">
+            <div class="card p-3 shadow">
+                <h5 class="text-info mb-3">Detalles de la Orden</h5>
+                <div class="table-responsive">
+                    <table class="table table-dark align-middle" id="itemsTable">
+                        <thead>
+                            <tr>
+                                <th>Cant.</th>
+                                <th>Item</th>
+                                <th>Descripción</th>
+                                <th>Costo</th>
+                                <th>Subtotal</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsBody"></tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td colspan="4" class="text-end fw-bold">TOTAL:</td>
+                                <td colspan="2" class="fw-bold" id="totalGeneralLabel">$0.00</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    // Configuración con tu URL y Key real de las imágenes
+    const _supabase = supabase.createClient('https://kcamvogialgzhtnztink.supabase.co', 'sb_publishable_KDacU7ubY2lYE6BAVvhOmA_qe1XUR2s');
+
+    async function cargarCatalogos() {
+        console.log("Iniciando carga de catálogos...");
+        
+        // 1. Cargar Proveedores (Usando nombre_comercial según tu DB)
+        const { data: provs, error: errProv } = await _supabase
+            .from('proveedores')
+            .select('id, nombre_comercial, direccion');
+        
+        if (errProv) {
+            console.error("Error cargando proveedores:", errProv.message);
+        } else {
+            provs?.forEach(p => {
+                // Usamos p.nombre_comercial para que se muestre el texto correcto
+                $('#select_proveedor').append(`<option value="${p.id}" data-dir="${p.direccion}">${p.nombre_comercial}</option>`);
+            });
+        }
+
+        // 2. Cargar Proyectos (Usando nombre_proyecto y ubicacion_proyecto)
+        const { data: proys, error: errProy } = await _supabase
+            .from('proyectos')
+            .select('id, nombre_proyecto, ubicacion_proyecto');
+        
+        if (errProy) {
+            console.error("Error cargando proyectos:", errProy.message);
+        } else {
+            proys?.forEach(p => {
+                $('#select_proyecto').append(`<option value="${p.id}" data-ubica="${p.ubicacion_proyecto}">${p.nombre_proyecto}</option>`);
+            });
+        }
+    }
+
+    // Lógica para autocompletar la dirección de entrega según el proyecto
+    $('#select_proyecto').on('change', function() {
+        const ubica = $(this).find(':selected').data('ubica');
+        if (ubica) {
+            $('#direccion').val(ubica);
+        } else {
+            $('#direccion').val('');
+        }
+    });
+
+    $(document).ready(function() {
+        cargarCatalogos();
+    });
+</script>
+</body>
+</html>

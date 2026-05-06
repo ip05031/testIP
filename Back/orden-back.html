@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FacturaSnap Pro - Gestión de Órdenes</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    
+    <style>
+        body { background-color: #0f0f0f; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; }
+        .card { border: none; border-radius: 12px; background: #1e1e1e; margin-bottom: 1.5rem; }
+        .header-app { border-bottom: 2px solid #0dcaf0; padding-bottom: 10px; margin-bottom: 25px; }
+        
+        /* Ajustes para móviles: asegurar que los inputs se lean bien */
+        .form-control, .form-select { 
+            background-color: #2a2a2a; 
+            border: 1px solid #444; 
+            color: #fff; 
+            font-size: 16px; /* Evita zoom automático en iOS */
+        }
+        
+        .table-responsive { border-radius: 12px; background: #1e1e1e; padding: 15px; }
+        
+        /* Sticky sidebar para pantallas grandes */
+        @media (min-width: 1200px) {
+            .sidebar-fixed { position: sticky; top: 20px; max-height: 95vh; overflow-y: auto; }
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+        .total-row { background-color: #161616; font-size: 1.2rem; color: #0dcaf0; }
+    </style>
+</head>
+<body class="p-2 p-md-4">
+
+<div class="container-fluid">
+    <div class="header-app d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="m-0">
+                <a href="dashboard.html" class="text-decoration-none text-white">
+                    <i class="fas fa-arrow-left me-2 fs-4 text-info"></i>
+                </a>
+                FacturaSnap <span class="text-info">v3.2</span>
+            </h2>
+            <small class="text-secondary">Generación de Orden de Compra</small>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <span class="badge bg-info text-dark d-none d-md-inline">Panel de Operación</span>
+            <button class="btn btn-outline-danger btn-sm" onclick="window.location.href='login.html'">
+                <i class="fas fa-sign-out-alt"></i> Salir
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-xl-4 col-lg-5">
+            <div class="sidebar-fixed">
+                <form id="facturaForm">
+                    <div class="card p-3 shadow">
+                        <h5 class="text-info mb-3 border-bottom pb-2">Información General</h5>
+                        <div class="row g-2">
+                            <div class="col-6 mb-2">
+                                <label class="small">Orden de Compra</label>
+                                <input type="text" id="oc" class="form-control" placeholder="PC-001" required>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <label class="small">Fecha Emisión</label>
+                                <input type="date" id="fecha" class="form-control" required>
+                            </div>
+                            <div class="col-12 mb-2">
+                                <label class="small">Proyecto</label>
+                                <input type="text" id="proyecto" class="form-control" placeholder="Nombre del proyecto" required>
+                            </div>
+                            <div class="col-12 mb-2">
+                                <label class="small">Proveedor</label>
+                                <input type="text" id="proveedor" class="form-control" placeholder="Nombre de la empresa" required>
+                            </div>
+                            <div class="col-12 mb-2">
+                                <label class="small">Dirección</label>
+                                <input type="text" id="direccion" class="form-control" placeholder="Dirección completa" required>
+                            </div>
+                            <div class="col-12 mb-2">
+                                <label class="small">N&uacute;mero de Factura</label>
+                                <input type="text" id="numeroFactura" class="form-control" placeholder="Numero factura / DTE ">
+                            </div>                            
+                            <div class="col-6 mb-2 " style="display: none;">
+                                <label class="small">Válido hasta</label>
+                                <input type="text" id="goodThru" class="form-control" readonly>
+                            </div>
+                            <div class="col-6 mb-2" style="display: none;">
+                                <label class="small">Términos</label>
+                                <input type="text" id="terms" class="form-control" value="Net 30 days">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-3 shadow border-info">
+                        <h5 class="text-info mb-3 border-bottom pb-2">Agregar Artículo</h5>
+                        <div class="row g-2">
+                            <div class="col-4">
+                                <label class="small">Cant.</label>
+                                <input type="number" id="tempQty" class="form-control" value="1" min="1">
+                            </div>
+                            <div class="col-8">
+                                <label class="small">Código/Item</label>
+                                <input type="text" id="tempItem" class="form-control" placeholder="Cód-01">
+                            </div>
+                            <div class="col-12">
+                                <label class="small">Descripción</label>
+                                <textarea id="tempDesc" class="form-control" rows="2" placeholder="Nombre o detalle del producto"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="small">Costo Unitario ($)</label>
+                                <input type="number" id="tempCost" class="form-control" step="0.01" value="0.00">
+                            </div>
+                            <div class="col-12 mt-3">
+                                <button type="button" id="btnAddItem" class="btn btn-info w-100 fw-bold">
+                                    + AÑADIR A LA LISTA
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 py-3 fw-bold shadow">
+                        FINALIZAR Y GENERAR PDF
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-xl-8 col-lg-7">
+            <div class="card p-3 shadow">
+                <h5 class="text-info mb-3">Detalles de la Orden Actual</h5>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle" id="itemsTable">
+                        <thead>
+                            <tr>
+                                <th>Cant.</th>
+                                <th>Item</th>
+                                <th>Descripción</th>
+                                <th>Costo</th>
+                                <th>Subtotal</th>
+                                <th class="text-center">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsBody">
+                            </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td colspan="4" class="text-end fw-bold">TOTAL GENERAL:</td>
+                                <td colspan="2" class="fw-bold" id="totalGeneralLabel">$0.00</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="ordenCompra.js"></script>
+<script>
+$(document).ready(function() {
+    let itemsList = [];
+    const tableHistorial = $('#tablaFacturas').DataTable({
+        language: { url: '//cdn.datatables.net/plug-ins/1.13.11/i18n/es-ES.json' },
+        order: [[3, 'desc']]
+    });
+
+    // Manejo de Fechas
+    function actualizarFechas(fechaBase = null) {
+        let fechaEmision = fechaBase ? new Date(fechaBase) : new Date();
+        if (fechaBase) fechaEmision.setMinutes(fechaEmision.getMinutes() + fechaEmision.getTimezoneOffset());
+
+        const yyyy = fechaEmision.getFullYear();
+        const mm = String(fechaEmision.getMonth() + 1).padStart(2, '0');
+        const dd = String(fechaEmision.getDate()).padStart(2, '0');
+        
+        if (!fechaBase) $('#fecha').val(`${yyyy}-${mm}-${dd}`);
+
+        let fechaVence = new Date(fechaEmision);
+        fechaVence.setMonth(fechaVence.getMonth() + 1);
+        $('#goodThru').val(fechaVence.toLocaleDateString('es-ES'));
+    }
+
+    actualizarFechas();
+    $('#fecha').on('change', function() { actualizarFechas($(this).val()); });
+
+    // AGREGAR ARTÍCULO A LA TABLA
+    $('#btnAddItem').click(function() {
+        const qty = parseFloat($('#tempQty').val()) || 0;
+        const item = $('#tempItem').val().trim();
+        const desc = $('#tempDesc').val().trim();
+        const cost = parseFloat($('#tempCost').val()) || 0;
+
+        if (qty > 0 && desc !== "") {
+            const amount = qty * cost;
+            const newItem = { qty, item, desc, cost, amount };
+            itemsList.push(newItem);
+            renderTable();
+            
+            // Limpiar campos de item
+            $('#tempQty').val(1);
+            $('#tempItem').val('');
+            $('#tempDesc').val('');
+            $('#tempCost').val('0.00');
+        } else {
+            alert("Por favor, complete la descripción y cantidad.");
+        }
+    });
+
+    function renderTable() {
+        let html = '';
+        let total = 0;
+        itemsList.forEach((it, index) => {
+            total += it.amount;
+            html += `
+                <tr>
+                    <td>${it.qty}</td>
+                    <td><small>${it.item}</small></td>
+                    <td>${it.desc}</td>
+                    <td>$${it.cost.toFixed(2)}</td>
+                    <td class="text-info fw-bold">$${it.amount.toFixed(2)}</td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeItem(${index})">×</button>
+                    </td>
+                </tr>`;
+        });
+        $('#itemsBody').html(html);
+        $('#totalGeneralLabel').text('$' + total.toFixed(2));
+    }
+
+    window.removeItem = function(index) {
+        itemsList.splice(index, 1);
+        renderTable();
+    };
+
+    // GENERAR ORDEN COMPLETA
+    $('#facturaForm').on('submit', function(e) {
+        e.preventDefault();
+        if (itemsList.length === 0) {
+            alert("Debe agregar al menos un artículo a la orden.");
+            return;
+        }
+
+        const totalFinal = $('#totalGeneralLabel').text();
+        const fechaRaw = $('#fecha').val().split('-');
+        const fechaDoc = `${fechaRaw[2]}/${fechaRaw[1]}/${fechaRaw[0]}`;
+
+        // Agregar al historial
+        tableHistorial.row.add([
+            $('#oc').val(),
+            $('#proveedor').val(),
+            `<span class="text-info fw-bold">${totalFinal}</span>`,
+            fechaDoc,
+            $('#goodThru').val(),
+            `<button class="btn btn-sm btn-outline-danger btn-borrar">×</button>`
+        ]).draw();
+
+        const infoGeneral = {
+            oc: $('#oc').val(),
+            fecha: fechaDoc, // La variable que ya tienes calculada
+            proveedor: $('#proveedor').val(),
+            direccion: $('#direccion').val(),
+            goodThru: $('#goodThru').val(),
+            terms: $('#terms').val()
+        };
+
+        const totalFinal2 = $('#totalGeneralLabel').text();
+
+        // Llamada a la función actualizada
+        generarPDF(itemsList, infoGeneral, totalFinal2);
+
+        // Resetear todo
+        this.reset();
+        itemsList = [];
+        renderTable();
+        actualizarFechas();
+
+// Dentro de $('#facturaForm').on('submit', function(e) { ...
+
+
+
+    });
+
+
+    $('#tablaFacturas').on('click', '.btn-borrar', function() {
+        tableHistorial.row($(this).parents('tr')).remove().draw();
+    });
+});
+</script>
+</body>
+</html>

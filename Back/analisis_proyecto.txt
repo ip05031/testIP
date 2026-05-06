@@ -1,0 +1,32 @@
+
+
+        * PRoyecto
+            * nombre
+            * direccion
+            * codigo
+            * contabilidad
+                * ingreso
+                * gastos
+
+            * presupuesto
+
+
+
+* contabilidad
+
+* id_Proyecto
+*  
+
+
+
+que lleva contabilidad ?
+
+debe ir cada registro de compras.
+
+num   |    PRoyecto  | tipo_gasto   |  monto  | fecha    | tipo_movimiento
+
+
+
+
+Al final necesitamos este consolidado.
+
