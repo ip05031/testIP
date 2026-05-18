@@ -581,3 +581,12 @@ CREATE TABLE items (
     id SERIAL PRIMARY KEY,
     nombre_item TEXT NOT NULL UNIQUE
 );
+
+
+-- se crea un bucket para que pueda guardar todos los pdfs 
+
+-- se modifica la tabla ordenes_compra para agregar los campos de URL de los documentos relacionados
+ALTER TABLE ordenes_compra 
+ADD COLUMN url_factura TEXT,
+ADD COLUMN url_orden_compra TEXT,
+ADD COLUMN url_comprobante_pago TEXT;

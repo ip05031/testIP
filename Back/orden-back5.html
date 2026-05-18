@@ -91,13 +91,7 @@
                 <form id="facturaForm">
                     <div class="card p-3 shadow border-warning">
                         <h5 class="text-info mb-3 border-bottom pb-2">Información General</h5>
-
                         <div class="row g-2">
-                            <div class="col-12 mt-2">
-                                <input type="file" id="fileFactura" class="form-control" accept=".pdf">
-                                <label class="form-label text-success">Adjuntar Factura/Cotización Proveedor (PDF)</label>
-                            </div>
-
                             <div class="col-6 mb-2">
                                 <label class="small fw-bold">Orden de Compra <span
                                         class="label-db">[numero_orden]</span></label>
@@ -315,7 +309,6 @@
             const item = $('#tempItem').val().trim();
             const desc = $('#tempDesc').val().trim();
             const cost = parseFloat($('#tempCost').val());
-            const itemId = $(`#itemsDataList option[value='${item}']`).data('id') || null;
 
             if (!item || isNaN(qty) || isNaN(cost)) {
                 alert("Completa los datos del artículo.");
@@ -323,7 +316,7 @@
             }
 
             const amount = qty * cost;
-            listaArticulos.push({ qty, item, desc, cost, amount:qty * cost, itemId });
+            listaArticulos.push({ qty, item, desc, cost, amount });
             renderizarTabla();
 
             $('#tempQty').val(1); $('#tempItem').val(''); $('#tempDesc').val(''); $('#tempCost').val('');
@@ -334,7 +327,7 @@
             let subtotal = 0;
             listaArticulos.forEach(a => { if (a.item !== 'IVA') subtotal += a.amount; });
             const valorIVA = subtotal * 0.13;
-            listaArticulos.push({ qty: 1, item: 'IVA', desc: 'IVA COMPRA (13%)', cost: valorIVA, amount: valorIVA , itemId: 1 });
+            listaArticulos.push({ qty: 1, item: 'IVA', desc: 'IVA COMPRA (13%)', cost: valorIVA, amount: valorIVA });
             renderizarTabla();
         });
 
@@ -409,7 +402,7 @@
                 cantidad: art.qty,
                 costo_unitario: art.cost,
                 subtotal: art.amount,
-                item_id: art.itemId // Opcional si tienes el ID de la tabla items
+                // item_id: art.id_real_db // Opcional si tienes el ID de la tabla items
             }));
 
             // 4. Insertamos todos los detalles de un solo golpe (Bulk Insert)
@@ -492,21 +485,28 @@
         */
 
 
+        $(document).ready(function () {
+            cargarCatalogos();
+            obtenerSiguienteOC();
 
+            // Simular usuario si existe en header (para pruebas)
+            const user = $('#welcomeMsg').text().replace('Bienvenido, ', '').trim();
+            if (user) $('#registrado_por').val(user);
+        });
 
 
         // 1. Agregar a la función cargarCatalogos() o llamar por separado
         async function cargarItemsRelacionados() {
             const { data: itemsDB, error } = await _supabase
                 .from('items')
-                .select('id,codigo_item, nombre_item');
+                .select('codigo_item, nombre_item');
 
             if (!error && itemsDB) {
                 const $datalist = $('#itemsList');
                 $datalist.empty(); // Limpiar por si acaso
                 itemsDB.forEach(item => {
                     // El 'value' será el código y el texto interno ayuda a la búsqueda
-                    $datalist.append(`<option value="${item.codigo_item}" data-id="${item.id}">${item.nombre_item}</option>`);
+                    $datalist.append(`<option value="${item.codigo_item}">${item.nombre_item}</option>`);
                 });
             }
         }
@@ -532,10 +532,8 @@
             cargarCatalogos();
             obtenerSiguienteOC();
             cargarItemsRelacionados(); // <--- Nueva llamada
-            // Simular usuario si existe en header (para pruebas)
-            const user = $('#welcomeMsg').text().replace('Bienvenido, ', '').trim();
-            if (user) $('#registrado_por').val(user);
         });
+
     </script>
 </body>
 
