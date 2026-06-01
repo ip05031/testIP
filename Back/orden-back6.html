@@ -94,13 +94,15 @@
 
                         <div class="row g-2">
                             <div class="col-12 mt-2">
-                                <input type="file" id="fileFactura" class="form-control" accept=".pdf" required>
-                                <label class="form-label text-success">Adjuntar Factura/Cotización Proveedor (PDF) *</label>
+                                <input type="file" id="fileFactura" class="form-control" accept=".pdf">
+                                <label class="form-label text-success">Adjuntar Factura/Cotización Proveedor (PDF)</label>
                             </div>
 
                             <div class="col-6 mb-2">
-                                <label class="small fw-bold">Orden de Compra <span class="label-db">[numero_orden]</span></label>
-                                <input type="text" id="oc" class="form-control" placeholder="Cargando..." readonly required>
+                                <label class="small fw-bold">Orden de Compra <span
+                                        class="label-db">[numero_orden]</span></label>
+                                <input type="text" id="oc" class="form-control" placeholder="Cargando..." readonly
+                                    required>
                             </div>
                             <div class="col-6 mb-2">
                                 <label class="small fw-bold">Fecha Emisión <span class="label-db">[fecha]</span></label>
@@ -108,32 +110,44 @@
                             </div>
 
                             <div class="col-6 mb-2 oculto">
-                                <label class="small fw-bold">Vencimiento <span class="label-db">[fecha_vencimiento]</span></label>
+                                <label class="small fw-bold">Vencimiento <span
+                                        class="label-db">[fecha_vencimiento]</span></label>
                                 <input type="date" id="fecha_vencimiento" class="form-control" readonly>
                             </div>
 
+                            <!--div class="col-6 mb-2 oculto">
+                                <label class="small fw-bold">Aprobación <span
+                                        class="label-db">[fecha_aprobacion]</span></label>
+                                <input type="text" id="fecha_aprobacion" class="form-control" value="null" readonly>
+                            </div-->
+
                             <div class="col-12 mb-2">
-                                <label class="small fw-bold">Proyecto <span class="label-db">[proyecto_id]</span></label>
+                                <label class="small fw-bold">Proyecto <span
+                                        class="label-db">[proyecto_id]</span></label>
                                 <select id="select_proyecto" class="form-select" required>
                                     <option value="">Seleccione un proyecto...</option>
                                 </select>
                             </div>
 
                             <div class="col-12 mb-2">
-                                <label class="small fw-bold">Proveedor <span class="label-db">[proveedor_id]</span></label>
+                                <label class="small fw-bold">Proveedor <span
+                                        class="label-db">[proveedor_id]</span></label>
                                 <select id="select_proveedor" class="form-select" required>
                                     <option value="">Seleccione un proveedor...</option>
                                 </select>
-                                <small id="termino_pago_hint" class="text-warning d-block mt-1" style="font-size: 0.75rem;"></small>
+                                <small id="termino_pago_hint" class="text-warning d-block mt-1"
+                                    style="font-size: 0.75rem;"></small>
                             </div>
 
                             <div class="col-12 mb-2">
                                 <label class="small fw-bold">Dirección de Entrega</label>
-                                <input type="text" id="direccion" class="form-control" placeholder="Se llena por Proveedor" required>
+                                <input type="text" id="direccion" class="form-control"
+                                    placeholder="Se llena por Proveedor" required>
                             </div>
 
                             <div class="col-6 mb-2">
-                                <label class="small fw-bold">Factura / DTE <span class="label-db">[numero_factura_dte]</span></label>
+                                <label class="small fw-bold">Factura / DTE <span
+                                        class="label-db">[numero_factura_dte]</span></label>
                                 <input type="text" id="numeroFactura" class="form-control" placeholder="Ej: DTE-123">
                             </div>
                             <div class="col-6 mb-2 oculto">
@@ -142,8 +156,10 @@
                             </div>
 
                             <div class="col-12 mb-2 oculto">
-                                <label class="small fw-bold">Registrado por <span class="label-db">[registrado_por]</span></label>
-                                <input type="text" id="registrado_por" class="form-control" placeholder="Nombre de usuario" value="Norma Rodríguez">
+                                <label class="small fw-bold">Registrado por <span
+                                        class="label-db">[registrado_por]</span></label>
+                                <input type="text" id="registrado_por" class="form-control"
+                                    placeholder="Nombre de usuario" value="Norma Rodríguez">
                             </div>
                         </div>
                     </div>
@@ -155,16 +171,22 @@
                                 <label class="small">Cant.</label>
                                 <input type="number" id="tempQty" class="form-control" value="1">
                             </div>
+                            <!--div-- class="col-8">
+                                <label class="small">Item</label>
+                                <input type="text" id="tempItem" class="form-control" placeholder="Código">
+                            </div-->
 
                             <div class="col-8">
                                 <label class="small">Item</label>
                                 <input type="text" id="tempItem" class="form-control" placeholder="Escribe o selecciona..." list="itemsList">
-                                <datalist id="itemsList"></datalist>
+                                <datalist id="itemsList">
+                                    </datalist>
                             </div>
 
                             <div class="col-12">
                                 <label class="small">Descripción</label>
-                                <textarea id="tempDesc" class="form-control" rows="2" placeholder="Detalle del producto"></textarea>
+                                <textarea id="tempDesc" class="form-control" rows="2"
+                                    placeholder="Detalle del producto"></textarea>
                             </div>
                             <div class="col-12">
                                 <label class="small">Costo Unitario ($)</label>
@@ -172,8 +194,10 @@
                             </div>
 
                             <div class="col-12 d-flex gap-2">
-                                <button type="button" id="btnAddItem" class="btn btn-info w-75 fw-bold mt-3">+ AÑADIR A LISTA</button>
-                                <button type="button" id="btnApplyIVA" class="btn btn-outline-warning w-25 fw-bold mt-3" title="Aplicar 13% IVA">+ IVA</button>
+                                <button type="button" id="btnAddItem" class="btn btn-info w-75 fw-bold mt-3">+ AÑADIR A
+                                    LISTA</button>
+                                <button type="button" id="btnApplyIVA" class="btn btn-outline-warning w-25 fw-bold mt-3"
+                                    title="Aplicar 13% IVA">+ IVA</button>
                             </div>
                         </div>
                     </div>
@@ -238,11 +262,13 @@
 
         // 2. Cargar Catálogos
         async function cargarCatalogos() {
+            // Proveedores: Incluimos terminos_pago para la lógica de vencimiento
             const { data: provs } = await _supabase.from('proveedores').select('id, nombre_comercial, direccion, terminos_pago');
             provs?.forEach(p => {
                 $('#select_proveedor').append(`<option value="${p.id}" data-dir="${p.direccion}" data-termino="${p.terminos_pago}">${p.nombre_comercial}</option>`);
             });
 
+            // Proyectos
             const { data: proys } = await _supabase.from('proyectos').select('id, nombre_proyecto, ubicacion_proyecto');
             proys?.forEach(p => {
                 $('#select_proyecto').append(`<option value="${p.id}" data-ubica="${p.ubicacion_proyecto}">${p.nombre_proyecto}</option>`);
@@ -259,12 +285,15 @@
 
             const fechaVence = new Date(fechaEmision);
             
+            // Lógica: Si es "Contado", vence el mismo día. Si no, 30 días.
             if (terminoPago.toLowerCase().includes('contado')) {
+                // Se queda igual (0 días adicionales)
                 $('#termino_pago_hint').text("Término: Contado (Vence hoy)");
             } else {
                 fechaVence.setDate(fechaVence.getDate() + 30);
                 $('#termino_pago_hint').text("Término: Crédito (Vence en 30 días)");
             }
+            
 
             $('#fecha_vencimiento').val(fechaVence.toISOString().split('T')[0]);
         }
@@ -273,10 +302,14 @@
         $('#fecha').on('change', calcularVencimiento);
         $('#select_proveedor').on('change', function () {
             calcularVencimiento();
+        });
+
+        $('#select_proveedor').on('change', function () {
             const ubica = $(this).find(':selected').data('dir');
             if (ubica) $('#direccion').val(ubica);
         });
 
+        // Gestión de Artículos
         // Gestión de Artículos
         $('#btnAddItem').on('click', function () {
             const qty = parseFloat($('#tempQty').val());
@@ -284,6 +317,7 @@
             const desc = $('#tempDesc').val().trim();
             const cost = parseFloat($('#tempCost').val());
             
+            // CORRECCIÓN: Se cambió '#itemsDataList' por el ID correcto '#itemsList'
             const itemId = $(`#itemsList option[value='${item}']`).data('id') || null;
 
             if (!item || isNaN(qty) || isNaN(cost)) {
@@ -292,6 +326,7 @@
             }
 
             const amount = qty * cost;
+            // Guardamos el itemId correcto en el objeto
             listaArticulos.push({ qty, item, desc, cost, amount: qty * cost, itemId });
             renderizarTabla();
 
@@ -303,7 +338,7 @@
             let subtotal = 0;
             listaArticulos.forEach(a => { if (a.item !== 'IVA') subtotal += a.amount; });
             const valorIVA = subtotal * 0.13;
-            listaArticulos.push({ qty: 1, item: 'IVA', desc: 'IVA COMPRA (13%)', cost: valorIVA, amount: valorIVA , itemId: null });
+            listaArticulos.push({ qty: 1, item: 'IVA', desc: 'IVA COMPRA (13%)', cost: valorIVA, amount: valorIVA , itemId: 1 });
             renderizarTabla();
         });
 
@@ -330,7 +365,7 @@
             renderizarTabla();
         };
 
-        // GUARDADO FINAL TRANSACCIONAL CON INTEGRACIÓN DE STORAGE Y DOCUMENTOS_ORDEN
+        // GUARDADO FINAL CON DETALLE
         $('#facturaForm').on('submit', async function (e) {
             e.preventDefault();
 
@@ -339,20 +374,11 @@
                 return;
             }
 
-            // Validar que se haya adjuntado el archivo pdf de la factura
-            const fileInput = document.getElementById('fileFactura');
-            if (fileInput.files.length === 0) {
-                alert("Por favor, adjunte el archivo PDF de la Factura/Cotización.");
-                return;
-            }
-            const archivoFactura = fileInput.files[0];
-
             const totalNum = parseFloat($('#totalGeneralLabel').text().replace('$', '').replace(',', ''));
-            const numeroOrdenStr = $('#oc').val();
 
-            // 1. Guardar Encabezado en 'ordenes_compra'
+            // 1. Preparamos los datos del encabezado
             const datosOrden = {
-                numero_orden: parseInt(numeroOrdenStr),
+                numero_orden: parseInt($('#oc').val()),
                 fecha: $('#fecha').val(),
                 proveedor_id: parseInt($('#select_proveedor').val()),
                 proyecto_id: parseInt($('#select_proyecto').val()),
@@ -364,6 +390,7 @@
                 numero_factura_dte: $('#numeroFactura').val()
             };
 
+            // 2. Insertamos en ordenes_compra y pedimos que nos devuelva el registro creado (.select())
             const { data: nuevaOrden, error: errorOrden } = await _supabase
                 .from('ordenes_compra')
                 .insert([datosOrden])
@@ -375,113 +402,123 @@
                 return;
             }
 
+            // El ID generado por la base de datos
             const idGenerado = nuevaOrden.id;
 
-            // 2. Guardar Detalles en 'detalle_orden'
+            // 3. Preparamos el array de objetos para detalle_orden
             const detalleParaInsertar = listaArticulos.map(art => ({
                 orden_id: idGenerado,
                 descripcion: art.desc,
                 cantidad: art.qty,
                 costo_unitario: art.cost,
                 subtotal: art.amount,
-                item_id: art.itemId
+                item_id: art.itemId // Opcional si tienes el ID de la tabla items
             }));
 
+            // 4. Insertamos todos los detalles de un solo golpe (Bulk Insert)
             const { error: errorDetalle } = await _supabase
                 .from('detalle_orden')
                 .insert(detalleParaInsertar);
 
             if (errorDetalle) {
                 alert("Error al guardar el detalle: " + errorDetalle.message);
+                // Nota: En un sistema real aquí deberías considerar borrar la orden creada (rollback)
                 return;
             }
 
-            // CORRECCIÓN PUNTO 3 Y 4: Subida con nombres de archivo dinámicos y mapeo exacto en base de datos
-            try {
-                // CORRECCIÓN: Usamos el nombre real del archivo subido (ej: doc1.pdf, doc2.pdf) en lugar de un string estático
-                const nombreArchivoOriginal = archivoFactura.name;
-                const rutaFactura = `ordenes/${numeroOrdenStr}/${nombreArchivoOriginal}`;
-                const rutaOrdenGen = `ordenes/${numeroOrdenStr}/orden_compra.pdf`;
+            // 5. Si todo salió bien, generamos el PDF y notificamos
+            const infoPDF = {
+                oc: $('#oc').val(),
+                fecha: $('#fecha').val(),
+                proveedor: $('#select_proveedor option:selected').text(),
+                direccion: $('#direccion').val(),
+                goodThru: $('#fecha_vencimiento').val(),
+                terms: $('#select_proveedor option:selected').data('termino') || "Net 30 Days"
+            };
 
-                // Subir archivo adjunto al bucket 'documentos_compras' respetando el nombre original
-                const { error: errorUploadFactura } = await _supabase.storage
-                    .from('documentos_compras')
-                    .upload(rutaFactura, archivoFactura, { cacheControl: '3600', upsert: true });
-
-                if (errorUploadFactura) throw new Error("Error en Storage (Factura): " + errorUploadFactura.message);
-
-                // Preparar datos para la metadata del PDF generado
-                const infoPDF = {
-                    oc: numeroOrdenStr,
-                    fecha: $('#fecha').val(),
-                    proveedor: $('#select_proveedor option:selected').text(),
-                    direccion: $('#direccion').val(),
-                    goodThru: $('#fecha_vencimiento').val(),
-                    proyecto: $('#select_proyecto option:selected').text(),
-                    terms: $('#select_proveedor option:selected').data('termino') || "Net 30 Days"
-                };
-
-                // Interceptar o Generar el Blob de la Orden de Compra desde el script externo
-                let ordenCompraBlob;
-                if (typeof generarPDF === 'function') {
-                    ordenCompraBlob = generarPDF(listaArticulos, infoPDF, $('#totalGeneralLabel').text());
-                }
-
-                // Subir PDF Orden Generada si la función devolvió el Blob de salida
-                if (ordenCompraBlob) {
-                    const { error: errorUploadOrden } = await _supabase.storage
-                        .from('documentos_compras')
-                        .upload(rutaOrdenGen, ordenCompraBlob, { contentType: 'application/pdf', cacheControl: '3600', upsert: true });
-                    
-                    if (errorUploadOrden) throw new Error("Error en Storage (Orden): " + errorUploadOrden.message);
-                }
-
-                // CORRECCIÓN PUNTO 4: Guardar los paths dinámicos exactos en 'documentos_orden'
-                const registrosDocumentos = [
-                    {
-                        orden_id: idGenerado,
-                        tipo_documento: 'cotizacion', 
-                        ruta_storage: `documentos_compras/${rutaFactura}` // Refleja el path exacto con el nombre real del archivo
-                    },
-                    {
-                        orden_id: idGenerado,
-                        tipo_documento: 'orden_generada', 
-                        ruta_storage: `documentos_compras/${rutaOrdenGen}`
-                    }
-                ];
-
-                const { error: errorDocumentos } = await _supabase
-                    .from('documentos_orden')
-                    .insert(registrosDocumentos);
-
-                if (errorDocumentos) throw new Error("Error guardando registros en documentos_orden: " + errorDocumentos.message);
-
-                alert("¡Orden, Detalles y Archivos en Storage vinculados con éxito!");
+            if (typeof generarPDF === 'function') {
+                generarPDF(listaArticulos, infoPDF, $('#totalGeneralLabel').text());
+                alert("¡Orden y Detalles guardados con éxito!");
                 location.reload();
-
-            } catch (storageError) {
-                alert("Atención durante procesos de carga secundarios: " + storageError.message);
-                console.error(storageError);
             }
         });
 
+        /*
+        submit antiguo.
+
+        // GUARDADO FINAL
+        $('#facturaForm').on('submit', async function (e) {
+            e.preventDefault();
+
+            if (listaArticulos.length === 0) {
+                alert("La lista de artículos está vacía.");
+                return;
+            }
+
+            const totalNum = parseFloat($('#totalGeneralLabel').text().replace('$', '').replace(',', ''));
+
+            const datosDB = {
+                numero_orden: parseInt($('#oc').val()),
+                fecha: $('#fecha').val(),
+                proveedor_id: parseInt($('#select_proveedor').val()),
+                proyecto_id: parseInt($('#select_proyecto').val()),
+                total: totalNum,
+                estado: $('#estado').val(),
+                fecha_vencimiento: $('#fecha_vencimiento').val(),
+                registrado_por: $('#registrado_por').val(),
+                fecha_aprobacion: null,
+                numero_factura_dte: $('#numeroFactura').val()
+            };
+
+            const { error } = await _supabase.from('ordenes_compra').insert([datosDB]);
+
+            if (error) {
+                alert("Error DB: " + error.message);
+                return;
+            }
+
+            const infoPDF = {
+                oc: $('#oc').val(),
+                fecha: $('#fecha').val(),
+                proveedor: $('#select_proveedor option:selected').text(),
+                direccion: $('#direccion').val(),
+                goodThru: $('#fecha_vencimiento').val(),
+                terms: $('#select_proveedor option:selected').data('termino') || "Net 30 Days"
+            };
+
+            if (typeof generarPDF === 'function') {
+                generarPDF(listaArticulos, infoPDF, $('#totalGeneralLabel').text());
+                alert("¡Orden Guardada!");
+                location.reload();
+            }
+        });
+        */
+
+
+
+
+
+        // 1. Agregar a la función cargarCatalogos() o llamar por separado
         async function cargarItemsRelacionados() {
             const { data: itemsDB, error } = await _supabase
                 .from('items')
-                .select('id, codigo_item, nombre_item');
+                .select('id,codigo_item, nombre_item');
 
             if (!error && itemsDB) {
                 const $datalist = $('#itemsList');
-                $datalist.empty();
+                $datalist.empty(); // Limpiar por si acaso
                 itemsDB.forEach(item => {
+                    // El 'value' será el código y el texto interno ayuda a la búsqueda
                     $datalist.append(`<option value="${item.codigo_item}" data-id="${item.id}">${item.nombre_item}</option>`);
                 });
             }
         }
 
+        // 2. Lógica para que al seleccionar un código se auto-complete la descripción
         $('#tempItem').on('input', async function() {
             const selectedCode = $(this).val();
             
+            // Buscamos si el código existe en el datalist para traer su descripción
             const { data: itemData } = await _supabase
                 .from('items')
                 .select('nombre_item')
@@ -493,10 +530,12 @@
             }
         });
 
+        // 3. No olvides llamar a la función al cargar el documento
         $(document).ready(function () {
             cargarCatalogos();
             obtenerSiguienteOC();
-            cargarItemsRelacionados();
+            cargarItemsRelacionados(); // <--- Nueva llamada
+            // Simular usuario si existe en header (para pruebas)
             const user = $('#welcomeMsg').text().replace('Bienvenido, ', '').trim();
             if (user) $('#registrado_por').val(user);
         });

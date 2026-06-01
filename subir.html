@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Subida - Supabase Storage</title>
+    <!-- Cargamos el SDK oficial de Supabase desde CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: sans-serif; max-width: 500px; margin: 40px auto; padding: 20px; line-height: 1.6; }
+        .campo { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input[type="text"], input[type="file"] { width: 100%; padding: 8px; box-sizing: border-box; }
+        button { background: #3ecf8e; color: white; border: none; padding: 10px 15px; font-size: 16px; cursor: pointer; border-radius: 4px; width: 100%; }
+        button:hover { background: #34b27b; }
+        #estado { margin-top: 20px; padding: 10px; border-radius: 4px; display: none; }
+        .exito { background: #e6fffa; color: #234e52; border: 1px solid #b2f5ea; }
+        .error { background: #fff5f5; color: #9b2c2c; border: 1px solid #fed7d7; }
+    </style>
+</head>
+<body>
+
+    <h2>Subida de PDFs por Orden</h2>
+    
+    <form id="formStorage">
+        <div class="campo">
+            <label for="numOrden">Número de Orden (Carpeta):</label>
+            <input type="text" id="numOrden" placeholder="Ej: ORD-1025" required>
+        </div>
+
+        <div class="campo">
+            <label for="archivoPdf">Selecciona el PDF (doc1.pdf, doc2.pdf, etc):</label>
+            <!-- Acepta solo PDFs gracias a la configuración del input -->
+            <input type="file" id="archivoPdf" accept="application/pdf" required>
+        </div>
+
+        <button type="submit" id="btnSubir">Autenticar y Subir Archivo</button>
+    </form>
+
+    <div id="estado"></div>
+
+    <script>
+        // Configuración de Supabase
+        // 1. Inicializas normal con tus credenciales de siempre
+        const SUPABASE_URL = "https://kcamvogialgzhtnztink.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_KDacU7ubY2lYE6BAVvhOmA_qe1XUR2s";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const form = document.getElementById('formStorage');
+        const btnSubir = document.getElementById('btnSubir');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const numOrden = document.getElementById('numOrden').value.trim();
+            const fileInput = document.getElementById('archivoPdf');
+            const file = fileInput.files[0];
+
+            if (!file) return;
+
+            btnSubir.disabled = true;
+            btnSubir.innerText = "Subiendo archivo...";
+
+            try {
+                // 2. Verificar DIRECTAMENTE si hay una sesión activa en esta página
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                
+                if (!session) {
+                    throw new Error("No estás logueado. Por favor ve a la pantalla de login primero.");
+                }
+
+                // 3. Estructura de ruta virtual
+                const filePath = `ordenes/${numOrden}/${file.name}`;
+
+                // 4. Subida directa (el SDK envía el token guardado automáticamente)
+                const { data, error } = await supabaseClient.storage
+                    .from('documentos_compras')
+                    .upload(filePath, file, {
+                        cacheControl: '3600',
+                        upsert: true 
+                    });
+
+                if (error) throw error;
+
+                alert(`¡Subido con éxito en: ${filePath}`);
+                form.reset();
+
+            } catch (error) {
+                alert("Error: " + error.message);
+            } finally {
+                btnSubir.disabled = false;
+                btnSubir.innerText = "Subir Archivo";
+            }
+        });
+        function mostrarMensaje(texto, tipo) {
+            estadoDiv.style.display = "block";
+            estadoDiv.className = tipo;
+            estadoDiv.innerHTML = texto;
+        }
+    </script>
+</body>
+</html>

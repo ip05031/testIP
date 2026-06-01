@@ -61,9 +61,9 @@ function generarPDF(items, info, totalTxt) {
         doc.rect(margenIzquierdo, yT, 530, 15, 'F'); doc.rect(margenIzquierdo, yT, 530, 30);
         doc.line(140, yT, 140, yT + 30); doc.line(240, yT, 240, yT + 30); doc.line(380, yT, 380, yT + 30);
         doc.setFont("helvetica", "bold")
-            .text("Good Thru", 65, yT + 11).text("Ship Via", 170, yT + 11).text("Account No.", 280, yT + 11).text("Terms", 460, yT + 11);
+            .text("Good Thru", 65, yT + 11).text("Ship Via", 170, yT + 11).text("Proyecto. ", 280, yT + 11).text("Terms", 460, yT + 11);
         doc.setFont("helvetica", "normal")
-            .text(formatearFecha(info.goodThru), 60, yT + 26).text("Airborne", 165, yT + 26).text(info.terms || "Net 30 Days", 450, yT + 26);
+            .text(formatearFecha(info.goodThru), 60, yT + 26).text("Airborne", 165, yT + 26).text(info.proyecto || "", 270, yT + 26).text(info.terms || "Net 30 Days", 450, yT + 26);
     };
 
     const dibujarHeaderYMarco = (yInicio) => {
@@ -122,5 +122,7 @@ function generarPDF(items, info, totalTxt) {
     doc.setFontSize(9).setFont("helvetica", "normal").text("Authorized Signature", margenIzquierdo, 770);
     doc.line(130, 770, 300, 770);
 
-    doc.save(`Orden_Compra_${info.oc}.pdf`);
+    //doc.save(`Orden_Compra_${info.oc}.pdf`);
+
+    return doc.output('blob');
 }
