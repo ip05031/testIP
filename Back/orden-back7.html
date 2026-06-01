@@ -94,8 +94,8 @@
 
                         <div class="row g-2">
                             <div class="col-12 mt-2">
-                                <input type="file" id="fileFactura" class="form-control" accept=".pdf">
-                                <label class="form-label text-muted">Adjuntar Factura/Cotización Proveedor (PDF) - Opcional</label>
+                                <input type="file" id="fileFactura" class="form-control" accept=".pdf" required>
+                                <label class="form-label text-success">Adjuntar Factura/Cotización Proveedor (PDF) *</label>
                             </div>
 
                             <div class="col-6 mb-2">
@@ -128,23 +128,13 @@
                             </div>
 
                             <div class="col-12 mb-2">
-                                <label class="small fw-bold">Periodo del Servicio/Entrega <span class="label-db">[periodo]</span> <span class="text-muted font-monospace" style="font-size: 0.7rem;">(Opcional)</span></label>
-                                <input type="text" id="periodo_orden" class="form-control" placeholder="Ej: Enero 2026 o Mayo-Junio 2026">
-                            </div>
-
-                            <div class="col-12 mb-2">
-                                <label class="small fw-bold">Descripción General de la Orden * <span class="label-db">[descripcion]</span></label>
-                                <textarea id="descripcion_orden" class="form-control" rows="4" placeholder="Escribe el objeto o justificación detallada de la orden de compra..." required></textarea>
-                            </div>
-
-                            <div class="col-12 mb-2">
                                 <label class="small fw-bold">Dirección de Entrega</label>
                                 <input type="text" id="direccion" class="form-control" placeholder="Se llena por Proveedor" required>
                             </div>
 
-                            <div class="col-12 mb-2">
+                            <div class="col-6 mb-2">
                                 <label class="small fw-bold">Factura / DTE <span class="label-db">[numero_factura_dte]</span></label>
-                                <input type="text" id="numeroFactura" class="form-control" placeholder="Se llenará automáticamente o 'DTE Pendiente'" readonly>
+                                <input type="text" id="numeroFactura" class="form-control" placeholder="Ej: DTE-123">
                             </div>
                             <div class="col-6 mb-2 oculto">
                                 <label class="small fw-bold">Estado <span class="label-db">[estado]</span></label>
@@ -287,31 +277,6 @@
             if (ubica) $('#direccion').val(ubica);
         });
 
-        // NUEVA LÓGICA: Procesar el nombre del archivo al cargarse en caché y extraer el DTE
-        $('#fileFactura').on('change', function() {
-            if (this.files.length === 0) {
-                $('#numeroFactura').val('');
-                return;
-            }
-
-            const nombreCompleto = this.files[0].name; // Ej: "Cotizacion Proveedor - DTE 123.pdf" o "Texto-DTE 123"
-            
-            // Removemos la extensión .pdf para trabajar sólo con el nombre
-            const nombreSinExt = nombreCompleto.substring(0, nombreCompleto.lastIndexOf('.')) || nombreCompleto;
-
-            // Buscamos el guion (-) divisor
-            if (nombreSinExt.includes('-')) {
-                const partes = nombreSinExt.split('-');
-                // Tomamos lo que esté después del último guion, limpiamos comillas y espacios externos
-                let dteExtraido = partes[partes.length - 1].replace(/["']/g, '').trim(); 
-                
-                $('#numeroFactura').val(dteExtraido);
-            } else {
-                // Si el archivo no trae guion divisor, dejamos el campo listo para que use la lógica por defecto o aviso
-                $('#numeroFactura').val('');
-            }
-        });
-
         // Gestión de Artículos
         $('#btnAddItem').on('click', function () {
             const qty = parseFloat($('#tempQty').val());
@@ -338,7 +303,7 @@
             let subtotal = 0;
             listaArticulos.forEach(a => { if (a.item !== 'IVA') subtotal += a.amount; });
             const valorIVA = subtotal * 0.13;
-            listaArticulos.push({ qty: 1, item: 'IVA', desc: 'IVA COMPRA (13%)', cost: valorIVA, amount: valorIVA , itemId: 1 });
+            listaArticulos.push({ qty: 1, item: 'IVA', desc: 'IVA COMPRA (13%)', cost: valorIVA, amount: valorIVA , itemId: null });
             renderizarTabla();
         });
 
@@ -365,7 +330,7 @@
             renderizarTabla();
         };
 
-        // GUARDADO FINAL TRANSACCIONAL
+        // GUARDADO FINAL TRANSACCIONAL CON INTEGRACIÓN DE STORAGE Y DOCUMENTOS_ORDEN
         $('#facturaForm').on('submit', async function (e) {
             e.preventDefault();
 
@@ -374,21 +339,16 @@
                 return;
             }
 
+            // Validar que se haya adjuntado el archivo pdf de la factura
+            const fileInput = document.getElementById('fileFactura');
+            if (fileInput.files.length === 0) {
+                alert("Por favor, adjunte el archivo PDF de la Factura/Cotización.");
+                return;
+            }
+            const archivoFactura = fileInput.files[0];
+
             const totalNum = parseFloat($('#totalGeneralLabel').text().replace('$', '').replace(',', ''));
             const numeroOrdenStr = $('#oc').val();
-            const descripcionOrdenStr = $('#descripcion_orden').val().trim();
-            const periodoOrdenStr = $('#periodo_orden').val().trim() || null;
-
-            // NUEVA LÓGICA: Determinar el valor del DTE / Factura según si hay archivo o no
-            const fileInput = document.getElementById('fileFactura');
-            let dteFinal = $('#numeroFactura').val().trim();
-            
-            if (fileInput.files.length === 0) {
-                dteFinal = "DTE Pendiente";
-            } else if (!dteFinal) {
-                // Caso alternativo si subieron un archivo pero no tenía el formato con guion '-'
-                dteFinal = "DTE Pendiente";
-            }
 
             // 1. Guardar Encabezado en 'ordenes_compra'
             const datosOrden = {
@@ -401,9 +361,7 @@
                 fecha_vencimiento: $('#fecha_vencimiento').val(),
                 registrado_por: $('#registrado_por').val(),
                 fecha_aprobacion: null,
-                numero_factura_dte: dteFinal, // Se guarda el DTE extraído o "DTE Pendiente"
-                descripcion: descripcionOrdenStr,
-                periodo: periodoOrdenStr
+                numero_factura_dte: $('#numeroFactura').val()
             };
 
             const { data: nuevaOrden, error: errorOrden } = await _supabase
@@ -438,74 +396,73 @@
                 return;
             }
 
-            // 3 y 4. PROCESO DE CARGA EN STORAGE (Solo se ejecuta si se adjuntó un archivo)
-            if (fileInput.files.length > 0) {
-                try {
-                    const archivoFactura = fileInput.files[0];
-                    const nombreArchivoOriginal = archivoFactura.name;
-                    const rutaFactura = `ordenes/${numeroOrdenStr}/${nombreArchivoOriginal}`;
-                    const rutaOrdenGen = `ordenes/${numeroOrdenStr}/orden_compra.pdf`;
+            // CORRECCIÓN PUNTO 3 Y 4: Subida con nombres de archivo dinámicos y mapeo exacto en base de datos
+            try {
+                // CORRECCIÓN: Usamos el nombre real del archivo subido (ej: doc1.pdf, doc2.pdf) en lugar de un string estático
+                const nombreArchivoOriginal = archivoFactura.name;
+                const rutaFactura = `ordenes/${numeroOrdenStr}/${nombreArchivoOriginal}`;
+                const rutaOrdenGen = `ordenes/${numeroOrdenStr}/orden_compra.pdf`;
 
-                    // Subir archivo adjunto al bucket 'documentos_compras'
-                    const { error: errorUploadFactura } = await _supabase.storage
-                        .from('documentos_compras')
-                        .upload(rutaFactura, archivoFactura, { cacheControl: '3600', upsert: true });
+                // Subir archivo adjunto al bucket 'documentos_compras' respetando el nombre original
+                const { error: errorUploadFactura } = await _supabase.storage
+                    .from('documentos_compras')
+                    .upload(rutaFactura, archivoFactura, { cacheControl: '3600', upsert: true });
 
-                    if (errorUploadFactura) throw new Error("Error en Storage (Factura): " + errorUploadFactura.message);
+                if (errorUploadFactura) throw new Error("Error en Storage (Factura): " + errorUploadFactura.message);
 
-                    // Preparar datos para la metadata del PDF generado de la orden
-                    const infoPDF = {
-                        oc: numeroOrdenStr,
-                        fecha: $('#fecha').val(),
-                        proveedor: $('#select_proveedor option:selected').text(),
-                        direccion: $('#direccion').val(),
-                        goodThru: $('#fecha_vencimiento').val(),
-                        proyecto: $('#select_proyecto option:selected').text(),
-                        terms: $('#select_proveedor option:selected').data('termino') || "Net 30 Days"
-                    };
+                // Preparar datos para la metadata del PDF generado
+                const infoPDF = {
+                    oc: numeroOrdenStr,
+                    fecha: $('#fecha').val(),
+                    proveedor: $('#select_proveedor option:selected').text(),
+                    direccion: $('#direccion').val(),
+                    goodThru: $('#fecha_vencimiento').val(),
+                    proyecto: $('#select_proyecto option:selected').text(),
+                    terms: $('#select_proveedor option:selected').data('termino') || "Net 30 Days"
+                };
 
-                    let ordenCompraBlob;
-                    if (typeof generarPDF === 'function') {
-                        ordenCompraBlob = generarPDF(listaArticulos, infoPDF, $('#totalGeneralLabel').text());
-                    }
-
-                    // Subir PDF Orden Generada si la función devolvió el Blob de salida
-                    if (ordenCompraBlob) {
-                        const { error: errorUploadOrden } = await _supabase.storage
-                            .from('documentos_compras')
-                            .upload(rutaOrdenGen, ordenCompraBlob, { contentType: 'application/pdf', cacheControl: '3600', upsert: true });
-                        
-                        if (errorUploadOrden) throw new Error("Error en Storage (Orden): " + errorUploadOrden.message);
-                    }
-
-                    // Guardar los registros en 'documentos_orden' ya que sí hubo archivos subidos
-                    const registrosDocumentos = [
-                        {
-                            orden_id: idGenerado,
-                            tipo_documento: 'cotizacion', 
-                            ruta_storage: `documentos_compras/${rutaFactura}`
-                        },
-                        {
-                            orden_id: idGenerado,
-                            tipo_documento: 'orden_generada', 
-                            ruta_storage: `documentos_compras/${rutaOrdenGen}`
-                        }
-                    ];
-
-                    const { error: errorDocumentos } = await _supabase
-                        .from('documentos_orden')
-                        .insert(registrosDocumentos);
-
-                    if (errorDocumentos) throw new Error("Error guardando registros en documentos_orden: " + errorDocumentos.message);
-
-                } catch (storageError) {
-                    alert("Atención durante procesos de carga secundarios de archivos: " + storageError.message);
-                    console.error(storageError);
+                // Interceptar o Generar el Blob de la Orden de Compra desde el script externo
+                let ordenCompraBlob;
+                if (typeof generarPDF === 'function') {
+                    ordenCompraBlob = generarPDF(listaArticulos, infoPDF, $('#totalGeneralLabel').text());
                 }
-            }
 
-            alert("¡Orden Guardada con éxito!");
-            location.reload();
+                // Subir PDF Orden Generada si la función devolvió el Blob de salida
+                if (ordenCompraBlob) {
+                    const { error: errorUploadOrden } = await _supabase.storage
+                        .from('documentos_compras')
+                        .upload(rutaOrdenGen, ordenCompraBlob, { contentType: 'application/pdf', cacheControl: '3600', upsert: true });
+                    
+                    if (errorUploadOrden) throw new Error("Error en Storage (Orden): " + errorUploadOrden.message);
+                }
+
+                // CORRECCIÓN PUNTO 4: Guardar los paths dinámicos exactos en 'documentos_orden'
+                const registrosDocumentos = [
+                    {
+                        orden_id: idGenerado,
+                        tipo_documento: 'cotizacion', 
+                        ruta_storage: `documentos_compras/${rutaFactura}` // Refleja el path exacto con el nombre real del archivo
+                    },
+                    {
+                        orden_id: idGenerado,
+                        tipo_documento: 'orden_generada', 
+                        ruta_storage: `documentos_compras/${rutaOrdenGen}`
+                    }
+                ];
+
+                const { error: errorDocumentos } = await _supabase
+                    .from('documentos_orden')
+                    .insert(registrosDocumentos);
+
+                if (errorDocumentos) throw new Error("Error guardando registros en documentos_orden: " + errorDocumentos.message);
+
+                alert("¡Orden, Detalles y Archivos en Storage vinculados con éxito!");
+                location.reload();
+
+            } catch (storageError) {
+                alert("Atención durante procesos de carga secundarios: " + storageError.message);
+                console.error(storageError);
+            }
         });
 
         async function cargarItemsRelacionados() {

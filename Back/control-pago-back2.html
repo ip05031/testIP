@@ -35,63 +35,9 @@
         .dropzone-area:hover { border-color: #0dcaf0; }
         
         /* Ajustes de tamaño y diseño para el panel lateral Maestro-Detalle */
-        .offcanvas { background-color: #151515; width: 550px !important; border-left: 1px solid #2d2d2d; }
-        .offcanvas-header { border-bottom: 1px solid #2d2d2d; background-color: #1a1a1a; }
-        
-        /* Estilos de mejora visual para la información general en el panel */
-        .info-block {
-            background-color: #1e1e1e;
-            border: 1px solid #2d2d2d;
-            border-radius: 8px;
-            padding: 12px;
-        }
-        .info-label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #888888;
-            margin-bottom: 2px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .info-label i {
-            color: #0dcaf0;
-            width: 14px;
-        }
-        .info-value {
-            font-size: 0.95rem;
-            color: #ffffff;
-            font-weight: 500;
-        }
-
-        /* Estilos refinados para la tabla de detalles en el panel */
-        .table-panel-container {
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid #2d2d2d;
-        }
-        .table-panel {
-            font-size: 0.88rem;
-            margin-bottom: 0;
-        }
-        .table-panel thead th {
-            background-color: #222222 !important;
-            color: #0dcaf0 !important;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 10px 12px;
-            border-bottom: 1px solid #2d2d2d;
-        }
-        .table-panel tbody td {
-            padding: 10px 12px;
-            background-color: #1a1a1a;
-            border-bottom: 1px solid #252525;
-        }
-        .table-panel tbody tr:last-child td {
-            border-bottom: none;
-        }
+        .offcanvas { background-color: #181818; width: 500px !important; border-left: 1px solid #2d2d2d; }
+        .offcanvas-header { border-bottom: 1px solid #2d2d2d; }
+        .table-panel { font-size: 0.85rem; background-color: #202020; }
     </style>
 </head>
 
@@ -148,17 +94,18 @@
                         <thead class="table-dark">
                             <tr>
                                 <th>PO</th>
-                                <th>Proyectos</th>
+                                <th>Proyecto</th>
                                 <th>Proveedor</th>
-                                <th>Descripción</th>
+                                <th>Emisión</th>
+                                <th>Vencimiento</th>
                                 <th>Total</th>
-                                <th>Fecha pagado</th>
+                                <th>DTE / Factura</th>
                                 <th class="text-center">Estado</th>
                             </tr>
                         </thead>
                         <tbody id="pagosBody">
                             <tr>
-                                <td colspan="7" class="text-center p-4">Cargando información...</td>
+                                <td colspan="8" class="text-center p-4">Cargando información...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -172,10 +119,11 @@
     </div>
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
+        // Configuración de Supabase
         const _supabase = supabase.createClient('https://kcamvogialgzhtnztink.supabase.co', 'sb_publishable_KDacU7ubY2lYE6BAVvhOmA_qe1XUR2s');
 
         let bsOffcanvas;
@@ -199,9 +147,9 @@
             }
         }
 
-        // 2. Cargar Datos mapeando Descripción y Fecha Aprobación
+        // 2. Cargar Datos
         async function cargarPagos(filtros = {}) {
-            $('#pagosBody').html('<tr><td colspan="7" class="text-center p-4">Buscando registros...</td></tr>');
+            $('#pagosBody').html('<tr><td colspan="8" class="text-center p-4">Buscando registros...</td></tr>');
 
             let query = _supabase
                 .from('ordenes_compra')
@@ -213,10 +161,6 @@
                     total, 
                     estado, 
                     numero_factura_dte,
-                    descripcion,
-                    fecha_aprobacion,
-                    periodo,
-                    registrado_por,
                     proveedores!inner ( nombre_comercial ),
                     proyectos!inner ( nombre_proyecto )
                 `);
@@ -231,7 +175,7 @@
             const { data, error } = await query;
 
             if (error) {
-                $('#pagosBody').html(`<tr><td colspan="7" class="text-center text-danger p-4">Error: ${error.message}</td></tr>`);
+                $('#pagosBody').html(`<tr><td colspan="8" class="text-center text-danger p-4">Error: ${error.message}</td></tr>`);
                 return;
             }
 
@@ -245,7 +189,7 @@
             const hoy = new Date().toISOString().split('T')[0];
 
             if (!data || data.length === 0) {
-                html = '<tr><td colspan="7" class="text-center p-4">No se encontraron resultados</td></tr>';
+                html = '<tr><td colspan="8" class="text-center p-4">No se encontraron resultados</td></tr>';
             } else {
                 data.forEach(p => {
                     let numStr = p.numero_orden ? p.numero_orden.toString().replace(/\D/g, '') : '000';
@@ -258,23 +202,18 @@
                     if (p.estado === 'Pagado') badgeClass = 'bg-success';
                     if (p.estado === 'Pendiente') badgeClass = 'bg-warning text-dark';
 
-                    let fechaPagadoFormateada = '---';
-                    if (p.fecha_aprobacion) {
-                        const soloFecha = p.fecha_aprobacion.split('T')[0];
-                        fechaPagadoFormateada = fmtF(soloFecha);
-                    }
-
                     html += `
                         <tr onclick="verDetalleOrden(${p.id})">
                             <td class="fw-bold text-info">${poLabel}</td>
                             <td><small class="fw-bold">${p.proyectos?.nombre_proyecto || 'N/A'}</small></td>
                             <td>${p.proveedores?.nombre_comercial || 'N/A'}</td>
-                            <td><small class="text-secondary">${p.descripcion || 'Sin descripción'}</small></td>
-                            <td class="fw-bold">$${p.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                            <td>${fmtF(p.fecha)}</td>
                             <td class="${esVencido ? 'text-vencido' : ''}">
-                                ${fechaPagadoFormateada} 
-                                ${esVencido ? '<i class="fas fa-exclamation-triangle ms-1" title="Orden vencida sin pagar"></i>' : ''}
+                                ${fmtF(p.fecha_vencimiento)} 
+                                ${esVencido ? '<i class="fas fa-exclamation-triangle ms-1"></i>' : ''}
                             </td>
+                            <td class="fw-bold">$${p.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                            <td><small class="text-secondary">${p.numero_factura_dte || '---'}</small></td>
                             <td class="text-center"><span class="status-badge ${badgeClass}">${p.estado}</span></td>
                         </tr>`;
                 });
@@ -282,7 +221,7 @@
             $('#pagosBody').html(html);
         }
 
-        // 4. UI/UX: Renderizar Vista Detalle (Información General y Tabla Mejoradas)
+        // 4. UI/UX: Renderizar Vista Detalle (Con subtabla de items de la orden)
         async function verDetalleOrden(id) {
             const orden = ordenesCache.find(o => o.id === id);
             if (!orden) return;
@@ -290,15 +229,13 @@
             let numStr = orden.numero_orden ? orden.numero_orden.toString().replace(/\D/g, '') : '000';
             let poLabel = `PO - ${numStr.padStart(3, '0')}`;
 
+            // Renderizado base del esqueleto del panel
             let htmlPanel = `
                 <div class="offcanvas-header">
-                    <h5 class="offcanvas-title fw-bold text-info" id="panelDetalleLabel">
-                        <i class="fas fa-file-invoice-dollar me-2"></i>Expediente ${poLabel}
-                    </h5>
+                    <h5 class="offcanvas-title fw-bold text-info" id="panelDetalleLabel">${poLabel}</h5>
                     <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
                 </div>
                 <div class="offcanvas-body">
-                    <!-- Botones de Acción -->
                     <div class="d-flex gap-2 mb-4">
                         ${orden.estado?.toLowerCase() === 'pendiente' ? 
                             `<button class="btn btn-success w-50 fw-bold" onclick="abrirFormularioPago(${orden.id})">
@@ -313,89 +250,31 @@
                         </button>
                     </div>
 
-                    <!-- SECCIÓN: INFORMACIÓN GENERAL OPTIMIZADA -->
-                    <h6 class="text-info text-uppercase small fw-bold mb-3 d-flex align-items-center gap-1">
-                        <i class="fas fa-info-circle"></i> Información General
-                    </h6>
+                    <h6 class="text-secondary text-uppercase small fw-bold mb-3">Información General</h6>
+                    <div class="mb-2"><strong>Proyecto:</strong> <span class="text-white">${orden.proyectos?.nombre_proyecto || 'N/A'}</span></div>
+                    <div class="mb-2"><strong>Proveedor:</strong> <span class="text-white">${orden.proveedores?.nombre_comercial || 'N/A'}</span></div>
+                    <div class="mb-2"><strong>Fecha Emisión:</strong> <span class="text-white">${fmtF(orden.fecha)}</span></div>
+                    <div class="mb-2"><strong>Fecha Vencimiento:</strong> <span class="text-white">${fmtF(orden.fecha_vencimiento)}</span></div>
+                    <div class="mb-3"><strong>DTE / Factura Asociada:</strong> <span class="text-white">${orden.numero_factura_dte || '---'}</span></div>
                     
-                    <div class="row g-2 mb-4">
-                        <div class="col-12">
-                            <div class="info-block">
-                                <div class="info-label"><i class="fas fa-project-diagram"></i> Proyecto asignado</div>
-                                <div class="info-value text-info fw-bold">${orden.proyectos?.nombre_proyecto || 'N/A'}</div>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="info-block">
-                                <div class="info-label"><i class="fas fa-truck"></i> Proveedor</div>
-                                <div class="info-value">${orden.proveedores?.nombre_comercial || 'N/A'}</div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="info-block">
-                                <div class="info-label"><i class="fas fa-calendar-alt"></i> Emisión</div>
-                                <div class="info-value">${fmtF(orden.fecha)}</div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="info-block">
-                                <div class="info-label"><i class="fas fa-calendar-check"></i> Vencimiento</div>
-                                <div class="info-value">${fmtF(orden.fecha_vencimiento)}</div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="info-block">
-                                <div class="info-label"><i class="fas fa-receipt"></i> Registro DTE / Factura</div>
-                                <div class="info-value font-monospace small text-warning">${orden.numero_factura_dte || '---'}</div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="info-block">
-                                <div class="info-label"><i class="fas fa-clock"></i> Periodo</div>
-                                <div class="info-value">${orden.periodo || '---'}</div>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="info-block">
-                                <div class="info-label"><i class="fas fa-user-edit"></i> Registrado Por</div>
-                                <div class="info-value text-secondary small">${orden.registrado_por || '---'}</div>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="info-block">
-                                <div class="info-label"><i class="fas fa-align-left"></i> Justificación / Descripción</div>
-                                <div class="info-value small text-muted" style="line-height: 1.4;">${orden.descripcion || 'Sin descripción detallada registrada.'}</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- BLOQUE DESTACADO DE MONTO TOTAL -->
-                    <div class="d-flex justify-content-between align-items-center bg-dark p-3 rounded border border-secondary border-opacity-25 mb-4">
-                        <span class="fw-bold text-secondary text-uppercase small">Monto Total de la Orden:</span>
-                        <span class="fs-4 fw-bold text-success font-monospace">$${orden.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    <div class="d-flex justify-content-between align-items-center bg-dark p-2 rounded mb-4">
+                        <span class="fw-bold text-secondary">Monto Total:</span>
+                        <span class="fs-5 fw-bold text-success">$${orden.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                     </div>
 
-                    <!-- SECCIÓN: TABLA DETALLE ORDEN OPTIMIZADA -->
-                    <h6 class="text-info text-uppercase small fw-bold mb-3 d-flex align-items-center gap-1">
-                        <i class="fas fa-th-list"></i> Detalle de Ítems Solicitados
-                    </h6>
-                    
-                    <div class="table-responsive table-panel-container mb-3">
-                        <table class="table table-dark table-panel align-middle">
-                            <thead>
+                    <h6 class="text-secondary text-uppercase small fw-bold mb-2">Detalle de Ítems (Productos/Servicios)</h6>
+                    <div class="table-responsive rounded border border-secondary mb-3">
+                        <table class="table table-sm table-panel mb-0 align-middle">
+                            <thead class="table-group-divider">
                                 <tr>
-                                    <th style="width: 50%;">Descripción / Item</th>
-                                    <th style="width: 15%;" class="text-center">Cant.</th>
-                                    <th style="width: 15%;" class="text-end">P. Unit</th>
-                                    <th style="width: 20%;" class="text-end">Subtotal</th>
+                                    <th>Descripción</th>
+                                    <th class="text-center">Cant.</th>
+                                    <th class="text-end">P. Unit</th>
+                                    <th class="text-end">Subtotal</th>
                                 </tr>
                             </thead>
                             <tbody id="itemsOrdenBody">
-                                <tr>
-                                    <td colspan="4" class="text-center text-secondary py-4">
-                                        <i class="fas fa-spinner fa-spin me-2"></i> Leyendo ítems...
-                                    </td>
-                                </tr>
+                                <tr><td colspan="4" class="text-center text-secondary p-2"><i class="fas fa-spinner fa-spin me-1"></i> Leyendo ítems...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -404,6 +283,7 @@
             $('#panelContentWrapper').html(htmlPanel);
             bsOffcanvas.show();
 
+            // Consulta asíncrona de la tabla hijo: detalle_orden
             try {
                 const { data: detalles, error } = await _supabase
                     .from('detalle_orden')
@@ -414,17 +294,15 @@
 
                 let htmlItems = '';
                 if (!detalles || detalles.length === 0) {
-                    htmlItems = '<tr><td colspan="4" class="text-center text-muted py-3">Sin ítems registrados</td></tr>';
+                    htmlItems = '<tr><td colspan="4" class="text-center text-muted p-2">Sin ítems registrados</td></tr>';
                 } else {
                     detalles.forEach(d => {
                         htmlItems += `
                             <tr>
-                                <td>
-                                    <span class="text-white fw-medium d-block" style="font-size: 0.85rem;">${d.descripcion || 'Sin descripción'}</span>
-                                </td>
-                                <td class="text-center text-secondary fw-bold">${d.cantidad}</td>
-                                <td class="text-end text-muted font-monospace">$${Number(d.costo_unitario).toFixed(2)}</td>
-                                <td class="text-end text-info fw-bold font-monospace">$${Number(d.subtotal).toFixed(2)}</td>
+                                <td><small>${d.descripcion || 'Sin descripción'}</small></td>
+                                <td class="text-center">${d.cantidad}</td>
+                                <td class="text-end">$${Number(d.costo_unitario).toFixed(2)}</td>
+                                <td class="text-end fw-bold text-white">$${Number(d.subtotal).toFixed(2)}</td>
                             </tr>`;
                     });
                 }
@@ -432,11 +310,11 @@
 
             } catch (err) {
                 console.error("Error consultando detalle_orden:", err);
-                $('#itemsOrdenBody').html('<tr><td colspan="4" class="text-center text-danger py-3">No se pudieron cargar los ítems</td></tr>');
+                $('#itemsOrdenBody').html('<tr><td colspan="4" class="text-center text-danger p-2">No se pudieron cargar los ítems</td></tr>');
             }
         }
 
-        // 5. UI/UX: Formulario de Pago
+        // 5. UI/UX: Formulario de Pago (Limpio, sin botón archivar)
         function abrirFormularioPago(id) {
             const orden = ordenesCache.find(o => o.id === id);
             if (!orden) return;
@@ -485,7 +363,7 @@
             $('#panelContentWrapper').html(htmlFormulario);
         }
 
-        // 6. UI/UX: Área de Documentos
+        // 6. UI/UX: Nueva Pantalla del Área de Documentos (documentos_orden)
         async function abrirSeccionDocumentos(id) {
             const orden = ordenesCache.find(o => o.id === id);
             if (!orden) return;
@@ -535,8 +413,9 @@
                 </div>`;
 
             $('#panelContentWrapper').html(htmlDocs);
-            archivosCargados = [];
+            archivosCargados = []; // Reiniciar temporales
 
+            // Consultar dinámicamente los documentos actuales en la tabla: documentos_orden
             try {
                 const { data: docs, error } = await _supabase
                     .from('documentos_orden')
@@ -558,7 +437,7 @@
                             <div class="list-group-item bg-transparent border-secondary text-white d-flex justify-content-between align-items-center p-2">
                                 <div class="text-truncate me-2">
                                     <span class="d-block small fw-bold text-info">${d.tipo_documento}</span>
-                                    <span class="text-secondary" style="font-size:0.75rem;"><i class="fas fa-paperclip me-1"></i>${d.ruta_storage.split('/').pop()}</span>
+                                    <span class="text-secondary style="font-size:0.75rem;"><i class="fas fa-paperclip me-1"></i>${d.ruta_storage.split('/').pop()}</span>
                                 </div>
                                 <a href="#" class="btn btn-sm btn-outline-info border-0" title="Ver documento"><i class="fas fa-external-link-alt"></i></a>
                             </div>`;
@@ -573,6 +452,7 @@
             }
         }
 
+        // Manejadores de control de carga visual
         function manejarArchivos(files) {
             let tipo = $('#tipoDocumentoCarga').val();
             for (let file of files) {
@@ -598,6 +478,7 @@
             actualizarListaArchivosNuevos();
         }
 
+        // Acción final del Formulario de Pago
         async function procesarFormularioPago(e, id) {
             e.preventDefault();
             const numReferencia = $('#txtReferencia').val();
@@ -621,6 +502,7 @@
             }
         }
 
+        // Eventos de los filtros globales
         $('#filterForm').on('submit', function (e) {
             e.preventDefault();
             const filtros = {

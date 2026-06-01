@@ -122,7 +122,7 @@ function generarPDF(items, info, totalTxt) {
     doc.setFontSize(9).setFont("helvetica", "normal").text("Authorized Signature", margenIzquierdo, 770);
     doc.line(130, 770, 300, 770);
 
-    //doc.save(`Orden_Compra_${info.oc}.pdf`);
+    doc.save(`Orden_Compra_${info.oc}.pdf`);
 
     return doc.output('blob');
 }
