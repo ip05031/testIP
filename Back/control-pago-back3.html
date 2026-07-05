@@ -34,15 +34,8 @@
         }
         .dropzone-area:hover { border-color: #0dcaf0; }
         
-        /* Ajustes de tamaño, diseño y SCROLL para el panel lateral Maestro-Detalle */
-        .offcanvas { 
-            background-color: #151515; 
-            width: 100% !important; 
-            max-width: 550px; 
-            border-left: 1px solid #2d2d2d; 
-            max-height: 100vh;
-            overflow-y: auto;
-        }
+        /* Ajustes de tamaño y diseño para el panel lateral Maestro-Detalle */
+        .offcanvas { background-color: #151515; width: 550px !important; border-left: 1px solid #2d2d2d; }
         .offcanvas-header { border-bottom: 1px solid #2d2d2d; background-color: #1a1a1a; }
         
         /* Estilos de mejora visual para la información general en el panel */
@@ -154,13 +147,13 @@
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-dark">
                             <tr>
-                                <th>Proyecto</th>
+                                <th>PO</th>
+                                <th>Proyectos</th>
                                 <th>Proveedor</th>
                                 <th>Descripción</th>
-                                <th>Monto</th>
-                                <th>DTE</th>
-                                <th>Fecha Emisión</th>
-                                <th>Fecha Pagado</th>
+                                <th>Total</th>
+                                <th>Fecha pagado</th>
+                                <th class="text-center">Estado</th>
                             </tr>
                         </thead>
                         <tbody id="pagosBody">
@@ -246,7 +239,7 @@
             renderizarTabla(ordenesCache);
         }
 
-        // 3. Dibujar Tabla Principal con las nuevas columnas solicitadas
+        // 3. Dibujar Tabla Principal
         function renderizarTabla(data) {
             let html = '';
             const hoy = new Date().toISOString().split('T')[0];
@@ -255,8 +248,15 @@
                 html = '<tr><td colspan="7" class="text-center p-4">No se encontraron resultados</td></tr>';
             } else {
                 data.forEach(p => {
+                    let numStr = p.numero_orden ? p.numero_orden.toString().replace(/\D/g, '') : '000';
+                    let poLabel = `PO - ${numStr.padStart(3, '0')}`;
+
                     const esPendiente = p.estado?.toLowerCase() === 'pendiente';
                     const esVencido = esPendiente && p.fecha_vencimiento < hoy;
+
+                    let badgeClass = 'bg-secondary';
+                    if (p.estado === 'Pagado') badgeClass = 'bg-success';
+                    if (p.estado === 'Pendiente') badgeClass = 'bg-warning text-dark';
 
                     let fechaPagadoFormateada = '---';
                     if (p.fecha_aprobacion) {
@@ -266,23 +266,23 @@
 
                     html += `
                         <tr onclick="verDetalleOrden(${p.id})">
-                            <td><small class="fw-bold text-info">${p.proyectos?.nombre_proyecto || 'N/A'}</small></td>
+                            <td class="fw-bold text-info">${poLabel}</td>
+                            <td><small class="fw-bold">${p.proyectos?.nombre_proyecto || 'N/A'}</small></td>
                             <td>${p.proveedores?.nombre_comercial || 'N/A'}</td>
                             <td><small class="text-secondary">${p.descripcion || 'Sin descripción'}</small></td>
                             <td class="fw-bold">$${p.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                            <td class="font-monospace small text-warning">${p.numero_factura_dte || '---'}</td>
-                            <td>${fmtF(p.fecha)}</td>
                             <td class="${esVencido ? 'text-vencido' : ''}">
                                 ${fechaPagadoFormateada} 
                                 ${esVencido ? '<i class="fas fa-exclamation-triangle ms-1" title="Orden vencida sin pagar"></i>' : ''}
                             </td>
+                            <td class="text-center"><span class="status-badge ${badgeClass}">${p.estado}</span></td>
                         </tr>`;
                 });
             }
             $('#pagosBody').html(html);
         }
 
-        // 4. UI/UX: Renderizar Vista Detalle ("Detalle orden {num_orden}")
+        // 4. UI/UX: Renderizar Vista Detalle (Información General y Tabla Mejoradas)
         async function verDetalleOrden(id) {
             const orden = ordenesCache.find(o => o.id === id);
             if (!orden) return;
@@ -293,7 +293,7 @@
             let htmlPanel = `
                 <div class="offcanvas-header">
                     <h5 class="offcanvas-title fw-bold text-info" id="panelDetalleLabel">
-                        <i class="fas fa-file-invoice-dollar me-2"></i>Detalle orden ${poLabel}
+                        <i class="fas fa-file-invoice-dollar me-2"></i>Expediente ${poLabel}
                     </h5>
                     <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
                 </div>
