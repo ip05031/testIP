@@ -2,21 +2,25 @@
 <html lang="es" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Proyectos - FacturaSnap</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
     <style>
         body { background-color: #0f0f0f; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; }
-        .card { border: none; border-radius: 12px; background: #1e1e1e; }
+        .card { border: none; border-radius: 12px; background: #1e1e1e; margin-bottom: 1.5rem; }
         .header-app { border-bottom: 2px solid #0dcaf0; padding-bottom: 10px; margin-bottom: 25px; }
         .form-control { background-color: #2a2a2a; border: 1px solid #444; color: #fff; }
         .form-control:focus { border-color: #0dcaf0; box-shadow: none; background-color: #333; color: #fff; }
+        .table-responsive { border-radius: 12px; background: #1e1e1e; padding: 15px; }
+        label { color: #0dcaf0; font-weight: 500; margin-bottom: 4px; }
         .table-dark { --bs-table-bg: #1e1e1e; }
-        .btn-edit { color: #ffc107; border-color: #ffc107; }
-        .btn-edit:hover { background-color: #ffc107; color: #000; }
+        th { user-select: none; }
     </style>
 </head>
-<body class="p-4">
+<body class="p-2 p-md-4">
 
 <div class="container-fluid">
     <div class="header-app d-flex justify-content-between align-items-center">
@@ -30,35 +34,35 @@
 
     <div class="row g-4">
         <!-- Formulario dinámico (Insertar / Editar) -->
-        <div class="col-md-4">
-            <div class="card p-4 shadow">
-                <h5 class="text-info mb-3" id="formTitle"><i class="fas fa-folder-plus me-2"></i>Nuevo Proyecto</h5>
+        <div class="col-xl-4 col-lg-5">
+            <div class="card p-3 shadow">
+                <h5 class="text-info mb-3 border-bottom pb-2" id="formTitle"><i class="fas fa-folder-plus me-2"></i>Nuevo Proyecto</h5>
                 <form id="proyectoForm">
                     <!-- Campo oculto para el ID al editar -->
                     <input type="hidden" id="proyecto_id">
                     
                     <div class="mb-3">
-                        <label class="small fw-bold">Nombre del Proyecto</label>
+                        <label class="small">Nombre del Proyecto</label>
                         <input type="text" id="nombre_proyecto" class="form-control" placeholder="Ej. Remodelación Oficinas" required>
                     </div>
                     <div class="mb-3">
-                        <label class="small fw-bold">Código Interno</label>
+                        <label class="small">Código Interno</label>
                         <input type="text" id="codigo_proyecto" class="form-control" placeholder="Ej. P-2024-001">
                     </div>
                     <div class="mb-3">
-                        <label class="small fw-bold">Presupuesto Inicial ($)</label>
+                        <label class="small">Presupuesto Inicial ($)</label>
                         <input type="number" id="presupuesto_inicial" class="form-control" step="0.01" placeholder="0.00" required>
                     </div>
                     <div class="mb-3">
-                        <label class="small fw-bold">Ubicación / Dirección del Proyecto</label>
+                        <label class="small">Ubicación / Dirección del Proyecto</label>
                         <textarea id="ubicacion_proyecto" class="form-control" rows="3" placeholder="Dirección de entrega"></textarea>
                     </div>
                     
                     <div class="d-flex gap-2">
-                        <button type="submit" id="btnSubmit" class="btn btn-info w-100 fw-bold py-2">
+                        <button type="submit" id="btnSubmit" class="btn btn-info w-100 fw-bold mt-2 py-2">
                             <i class="fas fa-save me-2"></i>GUARDAR
                         </button>
-                        <button type="button" id="btnCancelar" class="btn btn-outline-secondary w-50 fw-bold d-none">
+                        <button type="button" id="btnCancelar" class="btn btn-outline-secondary w-50 fw-bold mt-2 d-none">
                             CANCELAR
                         </button>
                     </div>
@@ -67,11 +71,11 @@
         </div>
 
         <!-- Listado con botón de editar -->
-        <div class="col-md-8">
-            <div class="card p-4 shadow">
+        <div class="col-xl-8 col-lg-7">
+            <div class="card p-3 shadow">
                 <h5 class="text-info mb-3">Proyectos Registrados</h5>
                 <div class="table-responsive">
-                    <table class="table table-dark table-hover align-middle">
+                    <table class="table table-dark table-hover align-middle" id="tablaProyectos">
                         <thead>
                             <tr>
                                 <th>Código</th>
@@ -109,7 +113,7 @@
                     <td><span class="badge bg-secondary">${p.codigo_proyecto || 'N/A'}</span></td>
                     <td><div class="fw-bold text-info">${p.nombre_proyecto}</div></td>
                     <td class="text-warning fw-bold">$${presupuesto}</td>
-                    <td class="small text-secondary">${p.ubicacion_proyecto || 'Sin dirección'}</td>
+                    <td><div class="small text-secondary" style="max-width: 250px; white-space: normal; word-break: break-word;">${p.ubicacion_proyecto || 'Sin dirección'}</div></td>
                     <td class="text-center">
                         <div class="btn-group">
                             <button class="btn btn-outline-warning btn-sm" onclick='prepararEdicion(${JSON.stringify(p)})'>
@@ -122,7 +126,7 @@
                     </td>
                 </tr>`;
         });
-        $('#proyectosBody').html(html || '<tr><td colspan="5" class="text-center">No hay proyectos registrados</td></tr>');
+        $('#proyectosBody').html(html || '<tr><td colspan="5" class="text-center text-secondary">No hay proyectos registrados</td></tr>');
     }
 
     // 2. Lógica Dual: Insertar o Actualizar
@@ -149,6 +153,7 @@
         if (result.error) {
             alert("Error: " + result.error.message);
         } else {
+            alert(id ? "Proyecto actualizado" : "Proyecto guardado");
             cancelarEdicion();
             cargarProyectos();
         }
@@ -179,7 +184,7 @@
 
     $('#btnCancelar').on('click', cancelarEdicion);
 
-    // 5. Eliminar Proyecto[cite: 4]
+    // 5. Eliminar Proyecto
     async function eliminarProyecto(id) {
         if(confirm('¿Seguro que desea eliminar este proyecto?')) {
             const { error } = await _supabase.from('proyectos').delete().eq('id', id);

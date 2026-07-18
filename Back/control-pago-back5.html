@@ -29,9 +29,9 @@
             text-align: center;
             background: #252525;
             cursor: pointer;
-            transition: border-color 0.3s, background-color 0.3s;
+            transition: border-color 0.3s;
         }
-        .dropzone-area:hover, .dropzone-area.dragover { border-color: #0dcaf0; background-color: #2d3d40; }
+        .dropzone-area:hover { border-color: #0dcaf0; }
         
         .offcanvas { 
             background-color: #151515; 
@@ -190,6 +190,7 @@
 
         let bsOffcanvas;
         let ordenesCache = []; 
+        let archivosCargados = [];
 
         const fmtF = (f) => f ? f.split('-').reverse().join('/') : '-';
         const fmtM = (m) => Number(m).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -211,6 +212,7 @@
         async function cargarPagos(filtros = {}) {
             $('#pagosBody').html('<tr><td colspan="10" class="text-center p-4">Buscando registros...</td></tr>');
 
+            // Apuntamos a la vista calculada dinámicamente
             let query = _supabase
                 .from('v_control_pagos')
                 .select('*');
@@ -243,6 +245,7 @@
                 data.forEach(p => {
                     const esVencido = p.monto_pendiente > 0 && p.fecha_vencimiento < hoy;
 
+                    // Manejo dinámico de estados visuales
                     let badgeClass = 'bg-secondary';
                     let estadoVisual = p.estado;
 
@@ -417,6 +420,7 @@
             $('#panelContentWrapper').html(htmlPanel);
             bsOffcanvas.show();
 
+            // Carga paralela de ítems e historial de abonos reales
             try {
                 _supabase.from('detalle_orden').select('descripcion, cantidad, costo_unitario, subtotal').eq('orden_id', id)
                     .then(({ data: detalles }) => {
@@ -448,7 +452,7 @@
                                 htmlAbonos += `
                                     <tr>
                                         <td>${fmtF(soloFecha)}</td>
-                                        <td><small class="text-secondary">${a.notes || a.notas || ''}</small></td>
+                                        <td><small class="text-secondary">${a.notas || ''}</small></td>
                                         <td class="text-end text-success fw-bold font-monospace">$${fmtM(a.monto_pagado)}</td>
                                     </tr>`;
                             });
@@ -524,13 +528,16 @@
                 return;
             }
 
+            // Deshabilitar botón para mitigar duplicidad transaccional
             $btn.prop('disabled', true).text('Procesando...');
 
             try {
+                // 1. Guardar la transacción del abono en pagos_orden
                 const { error: errorPago } = await _supabase.from('pagos_orden').insert([
                     {
                         orden_id: id,
                         monto_pagado: montoAbono,
+                        //notes: notas, // Mapeado a notas según estructura previa
                         notas: notas,
                         fecha_pago: new Date().toISOString(),
                         registrado_por: 'Norma Rodriguez' 
@@ -539,17 +546,21 @@
 
                 if (errorPago) throw new Error("Error guardando el abono: " + errorPago.message);
 
+                // 2. Si se adjuntó un documento, procesar subida al Storage y su tracking en documentos_orden
                 if (fileInput && fileInput.files.length > 0) {
                     const archivoComprobante = fileInput.files[0];
                     const nombreArchivoOriginal = archivoComprobante.name;
+                    // Generación de la ruta usando la estructura de la PO correspondiente
                     const rutaStorage = `pagos/PO_${numeroOrdenStr}/${Date.now()}_${nombreArchivoOriginal}`;
 
+                    // Subida al bucket físico 'documentos_compras' de Supabase
                     const { error: errorUpload } = await _supabase.storage
                         .from('documentos_compras')
                         .upload(rutaStorage, archivoComprobante, { cacheControl: '3600', upsert: true });
 
                     if (errorUpload) throw new Error("Error en Storage (Comprobante): " + errorUpload.message);
 
+                    // 3. Vincular el archivo subido en la tabla de metadata general 'documentos_orden'
                     const { error: errorDocumento } = await _supabase
                         .from('documentos_orden')
                         .insert([
@@ -566,6 +577,7 @@
                 alert("¡Abono y documentación registrados con éxito!");
                 bsOffcanvas.hide();
                 
+                // Recargar con los filtros actuales de la interfaz
                 const filtros = {
                     desde: $('#filterDesde').val(),
                     hasta: $('#filterHasta').val(),
@@ -604,15 +616,16 @@
                         <div class="mb-3">
                             <label class="small text-muted mb-1">Tipo de Documento:</label>
                             <select id="tipoDocumentoCarga" class="form-select form-select-sm">
-                                <option value="factura_cotizacion">factura_cotizacion</option>
-                                <option value="orden_generada">orden_generada</option>
-                                <option value="comprobante_pago">comprobante_pago</option>
+                                <option value="DTE / Factura Electrónica">DTE / Factura Electrónica</option>
+                                <option value="Comprobante de Transferencia">Comprobante de Transferencia</option>
+                                <option value="Nota de Remisión">Nota de Remisión</option>
+                                <option value="Otros">Otros</option>
                             </select>
                         </div>
-                        <div class="dropzone-area mb-2" id="dropzoneElement" onclick="$('#fileInput').click()">
+                        <div class="dropzone-area mb-2" onclick="$('#fileInput').click()">
                             <i class="fas fa-cloud-upload-alt text-info fs-4 mb-2"></i>
                             <p class="mb-0 small text-secondary">Presiona para examinar o arrastra el documento</p>
-                            <input type="file" id="fileInput" class="d-none" onchange="manejarArchivos(this.files, ${orden.id})">
+                            <input type="file" id="fileInput" multiple class="d-none" onchange="manejarArchivos(this.files)">
                         </div>
                         <ul class="list-group list-group-flush" id="listaArchivosNuevos"></ul>
                     </div>
@@ -624,20 +637,7 @@
                 </div>`;
 
             $('#panelContentWrapper').html(htmlDocs);
-
-            // Setup de eventos Drag and Drop nativos para la Dropzone dinámica
-            const zone = document.getElementById('dropzoneElement');
-            ['dragenter', 'dragover'].forEach(eventName => {
-                zone.addEventListener(eventName, (e) => { e.preventDefault(); zone.classList.add('dragover'); }, false);
-            });
-            ['dragleave', 'drop'].forEach(eventName => {
-                zone.addEventListener(eventName, (e) => { e.preventDefault(); zone.classList.remove('dragover'); }, false);
-            });
-            zone.addEventListener('drop', (e) => {
-                const dt = e.dataTransfer;
-                const files = dt.files;
-                manejarArchivos(files, orden.id);
-            }, false);
+            archivosCargados = [];
 
             try {
                 const { data: docs, error } = await _supabase
@@ -675,61 +675,29 @@
             }
         }
 
-        async function manejarArchivos(files, ordenId) {
-            if (!files || files.length === 0 || !ordenId) return;
-            
-            const tipoDocumento = $('#tipoDocumentoCarga').val();
-            const archivo = files[0];
-            const nombreOriginal = archivo.name;
-            
-            const orden = ordenesCache.find(o => o.id === ordenId);
-            let numStr = orden && orden.numero_orden ? orden.numero_orden.toString().replace(/\D/g, '') : '000';
-            const numeroOrdenStr = numStr.padStart(3, '0');
-            
-            let carpeta = 'ordenes';
-            if (tipoDocumento === 'comprobante_pago') {
-                carpeta = `pagos/PO_${numeroOrdenStr}`;
-            } else {
-                carpeta = `ordenes/${numeroOrdenStr}`;
+        function manejarArchivos(files) {
+            let tipo = $('#tipoDocumentoCarga').val();
+            for (let file of files) {
+                archivosCargados.push({ name: file.name, tipo: tipo });
             }
-            
-            const rutaStorage = `${carpeta}/${Date.now()}_${nombreOriginal}`;
-            
-            $('#listaArchivosNuevos').html(`
-                <li class="list-group-item bg-transparent text-info border-secondary p-2 small text-center">
-                    <i class="fas fa-spinner fa-spin me-2"></i> Subiendo "${nombreOriginal}" al repositorio...
-                </li>
-            `);
+            actualizarListaArchivosNuevos();
+        }
 
-            try {
-                const { error: errorUpload } = await _supabase.storage
-                    .from('documentos_compras')
-                    .upload(rutaStorage, archivo, { cacheControl: '3600', upsert: true });
+        function actualizarListaArchivosNuevos() {
+            let listHtml = '';
+            archivosCargados.forEach((doc, index) => {
+                listHtml += `
+                    <li class="list-group-item bg-transparent text-white border-secondary p-1 d-flex justify-content-between align-items-center small">
+                        <span class="text-truncate"><i class="fas fa-file-alt text-warning me-2"></i>[${doc.tipo}] ${doc.name}</span>
+                        <button type="button" class="btn btn-sm text-danger p-0 ms-2" onclick="eliminarArchivoTemp(${index})"><i class="fas fa-times"></i></button>
+                    </li>`;
+            });
+            $('#listaArchivosNuevos').html(listHtml);
+        }
 
-                if (errorUpload) throw new Error("Error en Storage: " + errorUpload.message);
-
-                const { error: errorDocumento } = await _supabase
-                    .from('documentos_orden')
-                    .insert([
-                        {
-                            orden_id: ordenId,
-                            tipo_documento: tipoDocumento,
-                            ruta_storage: `documentos_compras/${rutaStorage}`
-                        }
-                    ]);
-
-                if (errorDocumento) throw new Error("Error en Base de Datos: " + errorDocumento.message);
-
-                $('#listaArchivosNuevos').empty();
-                alert("¡Documento cargado y vinculado con éxito!");
-                
-                abrirSeccionDocumentos(ordenId);
-
-            } catch (err) {
-                alert("No se pudo cargar el archivo: " + err.message);
-                console.error(err);
-                $('#listaArchivosNuevos').empty();
-            }
+        function eliminarArchivoTemp(index) {
+            archivosCargados.splice(index, 1);
+            actualizarListaArchivosNuevos();
         }
 
         $('#btnExportExcel').on('click', function() {

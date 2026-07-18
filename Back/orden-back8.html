@@ -26,7 +26,7 @@
         .header-app {
             border-bottom: 2px solid #0dcaf0;
             padding-bottom: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         .form-control,
@@ -34,13 +34,7 @@
             background-color: #2a2a2a;
             border: 1px solid #444;
             color: #fff;
-            font-size: 15px;
-        }
-
-        /* Mejora en el contraste de los placeholders para accesibilidad */
-        .form-control::placeholder {
-            color: #b0b0b0 !important;
-            opacity: 1;
+            font-size: 16px;
         }
 
         .form-control:focus,
@@ -49,14 +43,6 @@
             box-shadow: none;
             background-color: #333;
             color: #fff;
-        }
-
-        /* Indicador visual claro para campos de solo lectura */
-        .form-control[readonly] {
-            background-color: #1a1a1a;
-            border-color: #333;
-            color: #aaa;
-            cursor: not-allowed;
         }
 
         .table-responsive {
@@ -85,164 +71,154 @@
         .oculto {
             display: none;
         }
-        
-        /* Quitar sombreado o selección por defecto en los headers de tablas */
-        th {
-            user-select: none;
-        }
     </style>
 </head>
 
 <body class="p-2 p-md-4">
 
     <div class="container-fluid">
-        <!-- Encabezado con indicador de estado estilizado -->
         <div class="header-app d-flex justify-content-between align-items-center">
             <h2 class="m-0">
                 <a href="index.html" class="text-decoration-none text-white">
                     <i class="fas fa-arrow-left me-2 fs-4 text-info"></i>
                 </a>Registro de Orden de Compra
             </h2>
-            <span class="badge d-flex align-items-center px-3 py-2" style="background-color: #0d47a1; color: #0dcaf0; border: 1px solid #0dcaf0;">
-                <i class="fas fa-info-circle me-2"></i> Validación de Vencimiento Dinámico
-            </span>
+            <span class="badge bg-info text-dark">Validación de Vencimiento Dinámico</span>
         </div>
 
-        <form id="facturaForm">
-            <!-- SECCIÓN SUPERIOR: Información General Extendida Horizontalmente -->
-            <div class="card p-3 shadow">
-                <h5 class="text-info mb-3 border-bottom pb-2">Información General</h5>
-                <div class="row g-3">
-                    <div class="col-md-4 col-sm-12">
-                        <label class="small fw-bold mb-1">Adjuntar Factura/Cotización Proveedor (PDF) - Opcional</label>
-                        <input type="file" id="fileFactura" class="form-control" accept=".pdf">
-                    </div>
-                    <div class="col-md-2 col-sm-6">
-                        <label class="small fw-bold mb-1">Orden de Compra <span class="label-db">[numero_orden]</span></label>
-                        <input type="text" id="oc" class="form-control" placeholder="Cargando..." readonly required>
-                    </div>
-                    <div class="col-md-2 col-sm-6">
-                        <label class="small fw-bold mb-1">Fecha Emisión <span class="label-db">[fecha]</span></label>
-                        <input type="date" id="fecha" class="form-control" required>
-                    </div>
-                    <div class="col-md-4 col-sm-12">
-                        <label class="small fw-bold mb-1">Proyecto <span class="label-db">[proyecto_id]</span></label>
-                        <select id="select_proyecto" class="form-select" required>
-                            <option value="">Seleccione un proyecto...</option>
-                        </select>
+        <div class="row g-4">
+            <div class="col-xl-4 col-lg-5">
+                <form id="facturaForm">
+                    <div class="card p-3 shadow border-warning">
+                        <h5 class="text-info mb-3 border-bottom pb-2">Información General</h5>
+
+                        <div class="row g-2">
+                            <div class="col-12 mt-2">
+                                <input type="file" id="fileFactura" class="form-control" accept=".pdf">
+                                <label class="form-label text-muted">Adjuntar Factura/Cotización Proveedor (PDF) - Opcional</label>
+                            </div>
+
+                            <div class="col-6 mb-2">
+                                <label class="small fw-bold">Orden de Compra <span class="label-db">[numero_orden]</span></label>
+                                <input type="text" id="oc" class="form-control" placeholder="Cargando..." readonly required>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <label class="small fw-bold">Fecha Emisión <span class="label-db">[fecha]</span></label>
+                                <input type="date" id="fecha" class="form-control" required>
+                            </div>
+
+                            <div class="col-6 mb-2 oculto">
+                                <label class="small fw-bold">Vencimiento <span class="label-db">[fecha_vencimiento]</span></label>
+                                <input type="date" id="fecha_vencimiento" class="form-control" readonly>
+                            </div>
+
+                            <div class="col-12 mb-2">
+                                <label class="small fw-bold">Proyecto <span class="label-db">[proyecto_id]</span></label>
+                                <select id="select_proyecto" class="form-select" required>
+                                    <option value="">Seleccione un proyecto...</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12 mb-2">
+                                <label class="small fw-bold">Proveedor <span class="label-db">[proveedor_id]</span></label>
+                                <select id="select_proveedor" class="form-select" required>
+                                    <option value="">Seleccione un proveedor...</option>
+                                </select>
+                                <small id="termino_pago_hint" class="text-warning d-block mt-1" style="font-size: 0.75rem;"></small>
+                            </div>
+
+                            <div class="col-12 mb-2">
+                                <label class="small fw-bold">Periodo del Servicio/Entrega <span class="label-db">[periodo]</span> <span class="text-muted font-monospace" style="font-size: 0.7rem;">(Opcional)</span></label>
+                                <input type="text" id="periodo_orden" class="form-control" placeholder="Ej: Enero 2026 o Mayo-Junio 2026">
+                            </div>
+
+                            <div class="col-12 mb-2">
+                                <label class="small fw-bold">Descripción General de la Orden * <span class="label-db">[descripcion]</span></label>
+                                <textarea id="descripcion_orden" class="form-control" rows="4" placeholder="Escribe el objeto o justificación detallada de la orden de compra..." required></textarea>
+                            </div>
+
+                            <div class="col-12 mb-2">
+                                <label class="small fw-bold">Dirección de Entrega</label>
+                                <input type="text" id="direccion" class="form-control" placeholder="Se llena por Proveedor" required>
+                            </div>
+
+                            <div class="col-12 mb-2">
+                                <label class="small fw-bold">Factura / DTE <span class="label-db">[numero_factura_dte]</span></label>
+                                <input type="text" id="numeroFactura" class="form-control" placeholder="Se llenará automáticamente o 'DTE Pendiente'" readonly>
+                            </div>
+                            <div class="col-6 mb-2 oculto">
+                                <label class="small fw-bold">Estado <span class="label-db">[estado]</span></label>
+                                <input type="text" id="estado" class="form-control" value="Pendiente" readonly>
+                            </div>
+
+                            <div class="col-12 mb-2 oculto">
+                                <label class="small fw-bold">Registrado por <span class="label-db">[registrado_por]</span></label>
+                                <input type="text" id="registrado_por" class="form-control" placeholder="Nombre de usuario" value="Norma Rodríguez">
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="col-md-4 col-sm-12">
-                        <label class="small fw-bold mb-1">Proveedor <span class="label-db">[proveedor_id]</span></label>
-                        <select id="select_proveedor" class="form-select" required>
-                            <option value="">Seleccione un proveedor...</option>
-                        </select>
-                        <small id="termino_pago_hint" class="text-warning d-block mt-1" style="font-size: 0.75rem;"></small>
-                    </div>
-                    <div class="col-md-4 col-sm-12">
-                        <label class="small fw-bold mb-1">Periodo del Servicio/Entrega <span class="label-db">[periodo]</span> <span class="text-muted font-monospace" style="font-size: 0.7rem;">(Opcional)</span></label>
-                        <input type="text" id="periodo_orden" class="form-control" placeholder="Ej: Enero 2026 o Mayo-Junio 2026">
-                    </div>
-                    <div class="col-md-4 col-sm-12">
-                        <label class="small fw-bold mb-1">Dirección de Entrega</label>
-                        <input type="text" id="direccion" class="form-control" placeholder="Se llena por Proveedor" required>
-                    </div>
-
-                    <div class="col-md-8 col-sm-12">
-                        <label class="small fw-bold mb-1">Descripción General de la Orden * <span class="label-db">[descripcion]</span></label>
-                        <textarea id="descripcion_orden" class="form-control" rows="2" placeholder="Escribe el objeto o justificación detallada de la orden de compra..." required></textarea>
-                    </div>
-                    <div class="col-md-4 col-sm-12">
-                        <label class="small fw-bold mb-1">Factura / DTE <span class="label-db">[numero_factura_dte]</span></label>
-                        <input type="text" id="numeroFactura" class="form-control" placeholder="Se llenará automáticamente o 'DTE Pendiente'" readonly>
-                    </div>
-
-                    <!-- Campos ocultos técnicos -->
-                    <div class="col-6 mb-2 oculto">
-                        <label class="small fw-bold">Vencimiento <span class="label-db">[fecha_vencimiento]</span></label>
-                        <input type="date" id="fecha_vencimiento" class="form-control" readonly>
-                    </div>
-                    <div class="col-6 mb-2 oculto">
-                        <label class="small fw-bold">Estado <span class="label-db">[estado]</span></label>
-                        <input type="text" id="estado" class="form-control" value="Pendiente" readonly>
-                    </div>
-                    <div class="col-12 mb-2 oculto">
-                        <label class="small fw-bold">Registrado por <span class="label-db">[registrado_por]</span></label>
-                        <input type="text" id="registrado_por" class="form-control" placeholder="Nombre de usuario" value="Norma Rodríguez">
-                    </div>
-                </div>
-            </div>
-
-            <!-- SECCIÓN INFERIOR: Distribución Bifocal (Agregar + Resumen) -->
-            <div class="row g-4">
-                <!-- Columna Izquierda: Agregar Artículo Compacto -->
-                <div class="col-xl-4 col-lg-5">
                     <div class="card p-3 shadow border-info">
                         <h5 class="text-info mb-3 border-bottom pb-2">Agregar Artículo</h5>
                         <div class="row g-2">
                             <div class="col-4">
-                                <label class="small mb-1">Cant.</label>
+                                <label class="small">Cant.</label>
                                 <input type="number" id="tempQty" class="form-control" value="1">
                             </div>
+
                             <div class="col-8">
-                                <label class="small mb-1">Item</label>
+                                <label class="small">Item</label>
                                 <input type="text" id="tempItem" class="form-control" placeholder="Escribe o selecciona..." list="itemsList">
                                 <datalist id="itemsList"></datalist>
                             </div>
+
                             <div class="col-12">
-                                <label class="small mb-1">Descripción</label>
+                                <label class="small">Descripción</label>
                                 <textarea id="tempDesc" class="form-control" rows="2" placeholder="Detalle del producto"></textarea>
                             </div>
                             <div class="col-12">
-                                <label class="small mb-1">Costo Unitario ($)</label>
+                                <label class="small">Costo Unitario ($)</label>
                                 <input type="number" id="tempCost" class="form-control" step="0.01" placeholder="0.00">
                             </div>
-                            <div class="col-12">
-                                <button type="button" id="btnAddItem" class="btn btn-info w-100 fw-bold mt-2 py-2">
-                                    <i class="fas fa-plus me-1"></i> AÑADIR A LISTA
-                                </button>
+
+                            <div class="col-12 d-flex gap-2">
+                                <button type="button" id="btnAddItem" class="btn btn-info w-75 fw-bold mt-3">+ AÑADIR A LISTA</button>
+                                <button type="button" id="btnApplyIVA" class="btn btn-outline-warning w-25 fw-bold mt-3" title="Aplicar 13% IVA">+ IVA</button>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Columna Derecha: Tabla Resumen y Botón de Cierre de Flujo -->
-                <div class="col-xl-8 col-lg-7">
-                    <div class="card p-3 shadow d-flex flex-column justify-content-between h-100 mb-0">
-                        <div>
-                            <h5 class="text-info mb-3">Resumen de la Orden</h5>
-                            <div class="table-responsive">
-                                <table class="table table-dark align-middle mb-0" id="itemsTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Cant.</th>
-                                            <th>Item</th>
-                                            <th>Descripción</th>
-                                            <th>Costo</th>
-                                            <th>Subtotal</th>
-                                            <th class="text-center">Acción</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="itemsBody"></tbody>
-                                    <tfoot>
-                                        <tr class="total-row">
-                                            <td colspan="4" class="text-end fw-bold">TOTAL GENERAL:</td>
-                                            <td colspan="2" class="fw-bold" id="totalGeneralLabel">$0.00</td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-                        </div>
-                        
-                        <div class="mt-4 text-end">
-                            <button type="submit" class="btn btn-success px-5 py-3 fw-bold shadow-sm" style="font-size: 1rem; border-radius: 8px;">
-                                <i class="fas fa-file-pdf me-2"></i> GUARDAR Y GENERAR PDF
-                            </button>
-                        </div>
+                    <button type="submit" class="btn btn-success w-100 py-3 fw-bold">GUARDAR Y GENERAR PDF</button>
+                </form>
+            </div>
+
+            <div class="col-xl-8 col-lg-7">
+                <div class="card p-3 shadow">
+                    <h5 class="text-info mb-3">Resumen de la Orden</h5>
+                    <div class="table-responsive">
+                        <table class="table table-dark align-middle" id="itemsTable">
+                            <thead>
+                                <tr>
+                                    <th>Cant.</th>
+                                    <th>Item</th>
+                                    <th>Descripción</th>
+                                    <th>Costo</th>
+                                    <th>Subtotal</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemsBody"></tbody>
+                            <tfoot>
+                                <tr class="total-row">
+                                    <td colspan="4" class="text-end fw-bold">TOTAL GENERAL:</td>
+                                    <td colspan="2" class="fw-bold" id="totalGeneralLabel">$0.00</td>
+                                </tr>
+                            </tfoot>
+                        </table>
                     </div>
                 </div>
             </div>
-        </form>
+        </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
@@ -255,6 +231,7 @@
 
         let listaArticulos = [];
 
+        // 1. Obtener siguiente correlativo
         async function obtenerSiguienteOC() {
             const { data, error } = await _supabase
                 .from('ordenes_compra')
@@ -269,6 +246,7 @@
             $('#oc').val(siguienteNumero.toString().padStart(3, '0'));
         }
 
+        // 2. Cargar Catálogos
         async function cargarCatalogos() {
             const { data: provs } = await _supabase.from('proveedores').select('id, nombre_comercial, direccion, terminos_pago');
             provs?.forEach(p => {
@@ -281,6 +259,7 @@
             });
         }
 
+        // Lógica de cálculo de vencimiento dinámico
         function calcularVencimiento() {
             const fechaE_str = $('#fecha').val();
             if (!fechaE_str) return;
@@ -300,6 +279,7 @@
             $('#fecha_vencimiento').val(fechaVence.toISOString().split('T')[0]);
         }
 
+        // Disparadores para recalcular vencimiento
         $('#fecha').on('change', calcularVencimiento);
         $('#select_proveedor').on('change', function () {
             calcularVencimiento();
@@ -307,25 +287,32 @@
             if (ubica) $('#direccion').val(ubica);
         });
 
+        // NUEVA LÓGICA: Procesar el nombre del archivo al cargarse en caché y extraer el DTE
         $('#fileFactura').on('change', function() {
             if (this.files.length === 0) {
                 $('#numeroFactura').val('');
                 return;
             }
 
-            const nombreCompleto = this.files[0].name;
+            const nombreCompleto = this.files[0].name; // Ej: "Cotizacion Proveedor - DTE 123.pdf" o "Texto-DTE 123"
+            
+            // Removemos la extensión .pdf para trabajar sólo con el nombre
             const nombreSinExt = nombreCompleto.substring(0, nombreCompleto.lastIndexOf('.')) || nombreCompleto;
 
+            // Buscamos el guion (-) divisor
             if (nombreSinExt.includes('-')) {
                 const partes = nombreSinExt.split('-');
+                // Tomamos lo que esté después del último guion, limpiamos comillas y espacios externos
                 let dteExtraido = partes[partes.length - 1].replace(/["']/g, '').trim(); 
                 
                 $('#numeroFactura').val(dteExtraido);
             } else {
+                // Si el archivo no trae guion divisor, dejamos el campo listo para que use la lógica por defecto o aviso
                 $('#numeroFactura').val('');
             }
         });
 
+        // Gestión de Artículos
         $('#btnAddItem').on('click', function () {
             const qty = parseFloat($('#tempQty').val());
             const item = $('#tempItem').val().trim();
@@ -346,73 +333,31 @@
             $('#tempQty').val(1); $('#tempItem').val(''); $('#tempDesc').val(''); $('#tempCost').val('');
         });
 
-        // Función para inyectar y actualizar dinámicamente el IVA (13%) en el arreglo
-        function calcularIvaAutomatico() {
-            listaArticulos = listaArticulos.filter(art => art.item !== 'IVA');
-
-            if (listaArticulos.length === 0) return;
-
-            let subtotalReal = 0;
-            listaArticulos.forEach(art => {
-                subtotalReal += art.amount;
-            });
-
-            const valorIVA = subtotalReal * 0.13;
-
-            listaArticulos.push({ 
-                qty: 1, 
-                item: 'IVA', 
-                desc: 'IVA COMPRA (13%)', 
-                cost: valorIVA, 
-                amount: valorIVA, 
-                itemId: 1 
-            });
-        }
+        $('#btnApplyIVA').on('click', function () {
+            if (listaArticulos.length === 0) return alert("Agrega artículos primero.");
+            let subtotal = 0;
+            listaArticulos.forEach(a => { if (a.item !== 'IVA') subtotal += a.amount; });
+            const valorIVA = subtotal * 0.13;
+            listaArticulos.push({ qty: 1, item: 'IVA', desc: 'IVA COMPRA (13%)', cost: valorIVA, amount: valorIVA , itemId: 1 });
+            renderizarTabla();
+        });
 
         function renderizarTabla() {
-            calcularIvaAutomatico();
-
             let html = '';
-            let subtotalAcumulado = 0;
-            let totalGeneral = 0;
-
+            let total = 0;
             listaArticulos.forEach((art, i) => {
-                totalGeneral += art.amount;
-                
-                if (art.item !== 'IVA') {
-                    subtotalAcumulado += art.amount;
-                    
-                    html += `<tr>
-                        <td>${art.qty}</td>
-                        <td><span>${art.item}</span></td>
-                        <td>${art.desc}</td>
-                        <td>$${art.cost.toFixed(2)}</td>
-                        <td>$${art.amount.toFixed(2)}</td>
-                        <td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm" onclick="eliminarItem(${i})"><i class="fas fa-trash"></i></button></td>
-                    </tr>`;
-                }
+                total += art.amount;
+                html += `<tr>
+                    <td>${art.qty}</td>
+                    <td><span class="${art.item === 'IVA' ? 'badge bg-warning text-dark' : ''}">${art.item}</span></td>
+                    <td>${art.desc}</td>
+                    <td>$${art.cost.toFixed(2)}</td>
+                    <td>$${art.amount.toFixed(2)}</td>
+                    <td><button type="button" class="btn btn-outline-danger btn-sm" onclick="eliminarItem(${i})"><i class="fas fa-trash"></i></button></td>
+                </tr>`;
             });
-
-            if (listaArticulos.length > 0) {
-                const registroIva = listaArticulos.find(art => art.item === 'IVA');
-                const costoIva = registroIva ? registroIva.amount : 0;
-
-                html += `
-                    <tr class="table-active text-muted" style="font-size: 0.9rem;">
-                        <td colspan="4" class="text-end fw-bold">SUBTOTAL:</td>
-                        <td>$${subtotalAcumulado.toFixed(2)}</td>
-                        <td></td>
-                    </tr>
-                    <tr class="table-active text-muted" style="font-size: 0.9rem;">
-                        <td colspan="4" class="text-end fw-bold"><span class="badge bg-warning text-dark me-1">IVA</span> IVA COMPRA (13%):</td>
-                        <td>$${costoIva.toFixed(2)}</td>
-                        <td class="text-center"><i class="fas fa-lock text-muted" title="Calculado automáticamente"></i></td>
-                    </tr>
-                `;
-            }
-
             $('#itemsBody').html(html);
-            $('#totalGeneralLabel').text(`$${totalGeneral.toFixed(2)}`);
+            $('#totalGeneralLabel').text(`$${total.toFixed(2)}`);
         }
 
         window.eliminarItem = (index) => {
@@ -420,6 +365,7 @@
             renderizarTabla();
         };
 
+        // GUARDADO FINAL TRANSACCIONAL
         $('#facturaForm').on('submit', async function (e) {
             e.preventDefault();
 
@@ -433,15 +379,18 @@
             const descripcionOrdenStr = $('#descripcion_orden').val().trim();
             const periodoOrdenStr = $('#periodo_orden').val().trim() || null;
 
+            // NUEVA LÓGICA: Determinar el valor del DTE / Factura según si hay archivo o no
             const fileInput = document.getElementById('fileFactura');
             let dteFinal = $('#numeroFactura').val().trim();
             
             if (fileInput.files.length === 0) {
                 dteFinal = "DTE Pendiente";
             } else if (!dteFinal) {
+                // Caso alternativo si subieron un archivo pero no tenía el formato con guion '-'
                 dteFinal = "DTE Pendiente";
             }
 
+            // 1. Guardar Encabezado en 'ordenes_compra'
             const datosOrden = {
                 numero_orden: parseInt(numeroOrdenStr),
                 fecha: $('#fecha').val(),
@@ -452,7 +401,7 @@
                 fecha_vencimiento: $('#fecha_vencimiento').val(),
                 registrado_por: $('#registrado_por').val(),
                 fecha_aprobacion: null,
-                numero_factura_dte: dteFinal,
+                numero_factura_dte: dteFinal, // Se guarda el DTE extraído o "DTE Pendiente"
                 descripcion: descripcionOrdenStr,
                 periodo: periodoOrdenStr
             };
@@ -470,6 +419,7 @@
 
             const idGenerado = nuevaOrden.id;
 
+            // 2. Guardar Detalles en 'detalle_orden'
             const detalleParaInsertar = listaArticulos.map(art => ({
                 orden_id: idGenerado,
                 descripcion: art.desc,
@@ -488,6 +438,7 @@
                 return;
             }
 
+            // 3 y 4. PROCESO DE CARGA EN STORAGE (Solo se ejecuta si se adjuntó un archivo)
             if (fileInput.files.length > 0) {
                 try {
                     const archivoFactura = fileInput.files[0];
@@ -495,12 +446,14 @@
                     const rutaFactura = `ordenes/${numeroOrdenStr}/${nombreArchivoOriginal}`;
                     const rutaOrdenGen = `ordenes/${numeroOrdenStr}/orden_compra.pdf`;
 
+                    // Subir archivo adjunto al bucket 'documentos_compras'
                     const { error: errorUploadFactura } = await _supabase.storage
                         .from('documentos_compras')
                         .upload(rutaFactura, archivoFactura, { cacheControl: '3600', upsert: true });
 
                     if (errorUploadFactura) throw new Error("Error en Storage (Factura): " + errorUploadFactura.message);
 
+                    // Preparar datos para la metadata del PDF generado de la orden
                     const infoPDF = {
                         oc: numeroOrdenStr,
                         fecha: $('#fecha').val(),
@@ -516,6 +469,7 @@
                         ordenCompraBlob = generarPDF(listaArticulos, infoPDF, $('#totalGeneralLabel').text());
                     }
 
+                    // Subir PDF Orden Generada si la función devolvió el Blob de salida
                     if (ordenCompraBlob) {
                         const { error: errorUploadOrden } = await _supabase.storage
                             .from('documentos_compras')
@@ -524,6 +478,7 @@
                         if (errorUploadOrden) throw new Error("Error en Storage (Orden): " + errorUploadOrden.message);
                     }
 
+                    // Guardar los registros en 'documentos_orden' ya que sí hubo archivos subidos
                     const registrosDocumentos = [
                         {
                             orden_id: idGenerado,
