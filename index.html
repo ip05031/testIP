@@ -91,13 +91,20 @@
             </a>
         </div>
 
-
-
         <div class="col-md-4 col-sm-6">
             <a href="control-pagos.html" class="menu-card shadow">
                 <i class="fas fa-table-list"></i>
                 <h5>Control de Pagos</h5>
                 <p>Seguimiento y vencimientos</p>
+            </a>
+        </div>
+
+        <!-- NUEVA TARJETA: REPORTES DEL SISTEMA -->
+        <div class="col-md-4 col-sm-6">
+            <a href="reportes.html" class="menu-card shadow">
+                <i class="fas fa-chart-pie"></i>
+                <h5>Reportes</h5>
+                <p>Auditoría contable y exportación formal</p>
             </a>
         </div>
 
@@ -118,6 +125,9 @@
         </div>
     </div>
 </div>
+
+<!-- Scripts unificados e integración limpia con Supabase -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
     const _supabase = supabase.createClient('https://kcamvogialgzhtnztink.supabase.co', 'sb_publishable_KDacU7ubY2lYE6BAVvhOmA_qe1XUR2s');
@@ -145,25 +155,18 @@
         }
     });
 
-    // Lógica de salida actualizada
+    // Lógica única de salida corregida
     async function handleLogout() {
         const { error } = await _supabase.auth.signOut();
-        if (error) alert("Error al cerrar sesión: " + error.message);
-        // El evento onAuthStateChange se encargará de la redirección
+        if (error) {
+            alert("Error al cerrar sesión: " + error.message);
+        }
     }
 
     // Ejecutar verificación al inicio
     $(document).ready(() => {
         checkSession();
     });
-</script>
-<script>
-    // Lógica básica de salida
-    function handleLogout() {
-        // Aquí iría la llamada a _supabase.auth.signOut()
-        alert("Cerrando sesión...");
-        window.location.href = 'login.html';
-    }
 </script>
 </body>
 </html>

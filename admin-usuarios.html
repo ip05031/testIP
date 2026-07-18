@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios - FacturaSnap</title>
+    
+    <!-- Estilos base unificados con tu ecosistema -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
+    <style>
+        body { background-color: #0f0f0f; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; }
+        .card { border: none; border-radius: 12px; background: #1e1e1e; margin-bottom: 1.5rem; }
+        .header-app { border-bottom: 2px solid #0dcaf0; padding-bottom: 10px; margin-bottom: 25px; }
+        .form-control, .form-select { background-color: #2a2a2a; border: 1px solid #444; color: #fff; }
+        .form-control:focus, .form-select:focus { background-color: #333; border-color: #0dcaf0; color: #fff; box-shadow: none; }
+        .table-responsive { border-radius: 12px; background: #1e1e1e; padding: 15px; }
+        label { color: #0dcaf0; font-weight: 500; margin-bottom: 4px; }
+        
+        /* Estado de carga inicial */
+        #loading-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #0f0f0f; z-index: 9999; display: flex;
+            flex-direction: column; align-items: center; justify-content: center;
+        }
+    </style>
+</head>
+<body class="p-2 p-md-4">
+
+<!-- Pantalla de bloqueo/carga mientras se valida el rol de Admin -->
+<div id="loading-screen">
+    <div class="spinner-border text-info mb-3" role="status"></div>
+    <h5 class="text-light">Verificando credenciales de seguridad...</h5>
+</div>
+
+<div class="container-fluid">
+    <!-- ENCABEZADO -->
+    <div class="header-app d-flex justify-content-between align-items-center">
+        <h2 class="m-0">
+            <a href="index.html" class="text-decoration-none text-white">
+                <i class="fas fa-arrow-left me-2 fs-4 text-info"></i>
+            </a>Panel de Administración
+        </h2>
+        <span class="badge bg-danger p-2 fs-6 fw-bold text-uppercase"><i class="fas fa-shield-halved me-1"></i> Zona Restringida</span>
+    </div>
+
+    <!-- CONTENIDO: GESTIÓN DE USUARIOS -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card p-3 shadow">
+                <h5 class="text-info mb-3"><i class="fas fa-user-plus me-2"></i>Registrar Nuevo Usuario</h5>
+                <form id="form-registro-usuario">
+                    <div class="mb-3">
+                        <label class="small">Correo Electrónico</label>
+                        <input type="email" id="user-email" class="form-control" required placeholder="nombre@empresa.com">
+                    </div>
+                    <div class="mb-3">
+                        <label class="small">Contraseña Temporal</label>
+                        <input type="password" id="user-password" class="form-control" required placeholder="••••••••">
+                    </div>
+                    <div class="mb-3">
+                        <label class="small">Rol Asignado</label>
+                        <select id="user-role" class="form-select">
+                            <option value="user">Usuario Estándar</option>
+                            <option value="admin">Administrador del Sistema</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-info w-100 fw-bold mt-2">
+                        <i class="fas fa-save me-2"></i>CREAR ACCESO
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card p-3 shadow">
+                <h5 class="text-info mb-3"><i class="fas fa-users me-2"></i>Usuarios del Sistema</h5>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Usuario / Email</th>
+                                <th>Rol</th>
+                                <th>Estado Auth</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-usuarios-body">
+                            <!-- Simulación o inyección real de tu tabla de perfiles -->
+                            <tr>
+                                <td class="fw-bold text-white">admin@facturasnap.co</td>
+                                <td><span class="badge bg-danger px-2.5">admin</span></td>
+                                <td><span class="badge bg-success">Activo</span></td>
+                                <td class="text-center">
+                                    <button class="btn btn-outline-secondary btn-sm border-0" disabled><i class="fas fa-ban"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts unificados -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    const _supabase = supabase.createClient('https://kcamvogialgzhtnztink.supabase.co', 'sb_publishable_KDacU7ubY2lYE6BAVvhOmA_qe1XUR2s');
+
+    // 🛡️ CONTROL DE ACCESO ESTRICTO (FRONTEND)
+    async function comprobarAccesoAdmin() {
+        const { data: { session }, error } = await _supabase.auth.getSession();
+        
+        // 1. Si no hay sesión válida, fuera de aquí[cite: 3]
+        if (error || !session) {
+            console.log("Acceso denegado: No se detectó sesión activa.");
+            console.log("Acceso denegado: No se detectó sesión activa.");
+            window.location.href = 'login.html';
+            return;
+        }
+
+        // 2. Extraer metadatos o consultar rol (Ejemplo usando user_metadata de Auth)
+        const metadata = session.user.user_metadata;
+        const rolUsuario = metadata && metadata.role ? metadata.role : 'user';
+
+        console.log(`Usuario autenticado con rol: ${rolUsuario}`);
+
+        // 3. Validar si es estrictamente administrador
+        if (rolUsuario !== 'admin') {
+            //alert("Acceso Restringido: Requiere permisos de Administrador.");
+            window.location.href = 'index.html'; // Lo sacamos al dashboard principal[cite: 3]
+            return;
+        }
+
+        // Si pasa todas las pruebas, quitamos la pantalla de carga de la UI
+        document.getElementById('loading-screen').style.display = 'none';
+        cargarListaUsuarios();
+    }
+
+    function cargarListaUsuarios() {
+        // Aquí puedes realizar un select * de tu tabla personalizada de perfiles en Supabase
+        console.log("Cargando base de datos de usuarios autorizados...");
+    }
+
+    // Escuchar si cierran sesión desde otra pestaña[cite: 3]
+    _supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_OUT' || !session) {
+            window.location.href = 'login.html';
+        }
+    });
+
+    // Inicializar la validación al abrir la página
+    $(document).ready(() => {
+        comprobarAccesoAdmin();
+    });
+</script>
+</body>
+</html>
